@@ -15,17 +15,19 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png">
 <style>
+/* Secondary text is darkened in Day and lightened in Night so it stays legible:
+   --sub 6.05:1 and --faint 4.91:1 on white; --faint 6.94:1 on the night card. */
 :root{
-  --page:#f2f2f0;--bg:#ffffff;--ink:#1d1d1f;--sub:#86868b;--faint:#b0aeab;
+  --page:#f2f2f0;--bg:#ffffff;--ink:#1d1d1f;--sub:#626269;--faint:#707078;
   --chip:#f5f5f3;--line:#f0efed;--note:#514f4d;--scheme:light;
 }
 :root[data-theme="dark"]{
-  --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#6e6e73;
+  --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#a0a0a5;
   --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;--scheme:dark;
 }
 @media (prefers-color-scheme:dark){
   :root[data-theme="system"]{
-    --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#6e6e73;
+    --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#a0a0a5;
     --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;--scheme:dark;
   }
 }
@@ -54,32 +56,39 @@ button{font-family:inherit;cursor:pointer}
 
 /* header */
 .top{padding-top:10px}
-.now-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.now-line{font-size:13px;color:var(--sub)}
-.chip-btn{border:none;background:var(--chip);color:var(--ink);width:30px;height:30px;border-radius:15px;font-size:15px;padding:0}
+.now-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.now-line{font-size:16px;font-weight:500;color:var(--sub);min-width:0}
+/* flex:none so a long date line can never squash the round buttons */
+.chip-btn{border:none;background:var(--chip);color:var(--ink);width:30px;height:30px;border-radius:15px;font-size:15px;padding:0;flex:none}
 /* the settings gear is a primary control and a frequent tap target — size it up */
 #gearBtn{width:44px;height:44px;border-radius:22px;font-size:22px;display:flex;align-items:center;justify-content:center}
-.eyebrow{font-size:11px;letter-spacing:0.14em;color:var(--sub);font-weight:600}
-.address{font-size:17px;font-weight:600;color:var(--ink);margin-top:3px}
+.eyebrow{font-size:14px;letter-spacing:0.10em;color:var(--sub);font-weight:600}
+.address{font-size:19px;font-weight:600;color:var(--ink);margin-top:3px}
 
 /* hero */
 .hero{margin-top:34px}
-.hero-label{font-size:15px;color:var(--sub)}
-.hero-when{font-size:54px;font-weight:700;letter-spacing:-0.02em;color:var(--ink);line-height:1.05;margin-top:4px}
+.hero-label{font-size:17px;color:var(--sub)}
+/* stays ~54px on a roomy screen but shrinks rather than clipping on narrow ones */
+/* Holds the full 54px wherever the longest label ("Wednesday", 290px at 54px)
+   fits, and steps down only on narrower screens. The per-scale caps keep the
+   RENDERED size at ~54px under Large/XL zoom instead of letting it clip. */
+.hero-when{font-size:clamp(44px,16vw,54px);font-weight:700;letter-spacing:-0.02em;color:var(--ink);line-height:1.05;margin-top:4px;overflow-wrap:break-word}
+:root[data-scale="1.15"] .hero-when{font-size:clamp(38px,14vw,47px)}
+:root[data-scale="1.3"] .hero-when{font-size:clamp(34px,12.5vw,41px)}
 .hero-type-row{display:flex;align-items:center;gap:9px;margin-top:12px}
-.dot{width:10px;height:10px;border-radius:5px;display:block;flex:none}
-.hero-type{font-size:17px;font-weight:600;color:var(--ink)}
-.hero-sub{font-size:14px;color:var(--sub);margin-top:5px}
-.then-line{font-size:14px;color:var(--sub);margin-top:14px}
+.dot{width:12px;height:12px;border-radius:6px;display:block;flex:none}
+.hero-type{font-size:19px;font-weight:600;color:var(--ink)}
+.hero-sub{font-size:17px;color:var(--sub);margin-top:5px}
+.then-line{font-size:17px;color:var(--sub);margin-top:14px}
 
 /* countdown */
 .count{margin-top:26px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .count .v{font-size:36px;font-weight:700;letter-spacing:-0.01em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;text-align:center}
-.count .l{font-size:11px;color:var(--sub);margin-top:5px;text-align:center}
-.count-caption{text-align:center;font-size:12px;color:var(--faint);margin-top:10px}
+.count .l{font-size:14px;color:var(--sub);margin-top:5px;text-align:center}
+.count-caption{text-align:center;font-size:16px;color:var(--faint);margin-top:10px;line-height:1.4}
 
 /* holiday note */
-.holiday{margin-top:22px;background:var(--chip);border-radius:12px;padding:13px 16px;font-size:13px;line-height:1.45;color:var(--note)}
+.holiday{margin-top:22px;background:var(--chip);border-radius:12px;padding:14px 16px;font-size:16px;line-height:1.5;color:var(--note)}
 
 /* calendar */
 .cal{margin-top:38px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
@@ -90,69 +99,76 @@ button{font-family:inherit;cursor:pointer}
 @keyframes cal-in-left{from{transform:translateX(24px);opacity:.2}to{transform:none;opacity:1}}
 @keyframes cal-in-right{from{transform:translateX(-24px);opacity:.2}to{transform:none;opacity:1}}
 .cal-head{display:flex;align-items:baseline;justify-content:space-between}
-.cal-title{font-size:17px;font-weight:600;color:var(--ink)}
+.cal-title{font-size:18px;font-weight:600;color:var(--ink)}
 .cal-nav{display:flex;gap:14px}
-#prevBtn,#nextBtn{width:40px;height:40px;border-radius:20px;font-size:20px;display:flex;align-items:center;justify-content:center}
+#prevBtn,#nextBtn{width:44px;height:44px;border-radius:22px;font-size:22px;display:flex;align-items:center;justify-content:center}
 .dow-row{display:grid;grid-template-columns:repeat(7,1fr);margin-top:16px}
-.dow-row div{text-align:center;font-size:11px;font-weight:600;color:var(--faint);padding-bottom:8px}
+.dow-row div{text-align:center;font-size:14px;font-weight:600;color:var(--faint);padding-bottom:8px}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px}
-.cell{height:42px;display:flex;flex-direction:column;align-items:center;gap:3px}
-.cell .n{width:34px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:400;color:var(--ink)}
+.cell{height:44px;display:flex;flex-direction:column;align-items:center;gap:3px}
+/* width tracks the column so enlarged text never forces sideways scrolling */
+.cell .n{width:100%;max-width:36px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:400;color:var(--ink)}
 .cell.blank .n{width:auto;height:auto}
 .cell.hol .u .hem{font-size:10px;line-height:1;display:block}
 .cell:not(.blank){cursor:pointer}
 .cell.sel .n{box-shadow:inset 0 0 0 2px var(--sub)}
-.day-note{margin-top:10px;background:var(--chip);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;color:var(--note)}
+.day-note{margin-top:12px;background:var(--chip);border-radius:12px;padding:14px;font-size:16px;line-height:1.5;color:var(--note)}
 .cell.g .n{background:#3EC163;color:#14161a;font-weight:600}
 .cell.r .n{background:#5FC9EE;color:#14161a;font-weight:600}
 .cell.today .n{box-shadow:inset 0 0 0 2px var(--ink);font-weight:600}
 .cell .u{display:flex;gap:3px;height:5px}
-.legend{display:flex;gap:18px;margin-top:10px}
-.legend div{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)}
-.sw{width:12px;height:12px;border-radius:3px;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px}
+.legend div{display:flex;align-items:center;gap:8px;font-size:16px;color:var(--sub)}
+.sw{width:16px;height:16px;border-radius:4px;display:block;flex:none}
 .sw.g{background:#3EC163}
 .sw.r{background:#5FC9EE}
 
 /* upcoming */
 .upc{margin-top:38px}
-.upc-title{font-size:17px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.upc-title{font-size:18px;font-weight:600;color:var(--ink);margin-bottom:4px}
 .upc-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
-.upc-row .mid{flex:1}
-.upc-row .t{font-size:15px;font-weight:500;color:var(--ink)}
-.upc-row .d{font-size:13px;color:var(--sub);margin-top:1px}
-.upc-row .w{font-size:13px;color:var(--sub)}
+.upc-row .mid{flex:1;min-width:0}
+.upc-row .t{font-size:17px;font-weight:600;color:var(--ink)}
+.upc-row .d{font-size:16px;color:var(--sub);margin-top:2px;line-height:1.35}
+.upc-row .w{font-size:16px;color:var(--sub);text-align:right;flex:none}
 
-.footnote{margin-top:26px;font-size:12px;line-height:1.5;color:var(--faint)}
+.footnote{margin-top:26px;font-size:16px;line-height:1.55;color:var(--faint)}
 
 /* settings */
 .scrim{position:absolute;inset:0;background:rgba(0,0,0,0.35);z-index:20}
 .sheet{position:absolute;top:120px;right:20px;width:280px;background:var(--bg);border-radius:18px;padding:18px 20px 22px;box-shadow:0 12px 40px rgba(0,0,0,0.25);max-height:calc(100% - 150px);overflow-y:auto;scrollbar-width:none}
 .sheet::-webkit-scrollbar{display:none}
 .sheet-head{display:flex;align-items:center;justify-content:space-between}
-.sheet-title{font-size:17px;font-weight:600;color:var(--ink)}
-.done-btn{border:none;background:none;color:var(--ink);font-size:15px;font-weight:600;padding:4px 0}
-.sect{font-size:11px;letter-spacing:0.14em;color:var(--sub);font-weight:600;margin-top:22px}
+.sheet-title{font-size:19px;font-weight:600;color:var(--ink)}
+.done-btn{border:none;background:none;color:var(--ink);font-size:17px;font-weight:600;padding:6px 0}
+.sect{font-size:14px;letter-spacing:0.10em;color:var(--sub);font-weight:600;margin-top:22px}
 .seg{display:flex;gap:0;background:var(--chip);border-radius:10px;padding:3px;margin-top:10px}
-.seg button{flex:1;border:none;padding:7px 0;border-radius:8px;font-size:13px;background:transparent;color:var(--ink);font-weight:400;box-shadow:none}
+.seg button{flex:1;border:none;padding:10px 4px;border-radius:8px;font-size:16px;background:transparent;color:var(--ink);font-weight:400;box-shadow:none}
 .seg button.on{background:var(--bg);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
-.seg.small button{font-size:12px}
-.hint{font-size:12px;color:var(--faint);margin-top:10px}
-.notif-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
-.notif-label{font-size:14px;color:var(--ink)}
+/* the two reminder-choice labels are long: let them wrap instead of shrinking */
+.seg.small button{font-size:16px;white-space:normal;line-height:1.25}
+.hint{font-size:15px;color:var(--faint);margin-top:10px;line-height:1.45}
+.notif-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:12px}
+.notif-label{font-size:16px;color:var(--ink)}
 .toggle{width:46px;height:28px;border-radius:14px;border:none;padding:2px;background:var(--chip);display:flex;justify-content:flex-start;align-items:center;transition:background .2s;flex:none}
 .toggle.on{background:#3EC163;justify-content:flex-end}
 .toggle i{width:24px;height:24px;border-radius:12px;background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.25);display:block}
 .seg.notify-time{margin-top:8px}
-.sub-label{font-size:14px;color:var(--ink);margin-top:16px}
-.notif-note{margin-top:12px;background:var(--chip);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;color:var(--note)}
-.time-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
-.time-row input{border:none;background:var(--chip);color:var(--ink);border-radius:8px;padding:6px 10px;font-family:inherit;font-size:13px;color-scheme:var(--scheme)}
+.sub-label{font-size:16px;color:var(--ink);margin-top:16px}
+.notif-note{margin-top:12px;background:var(--chip);border-radius:12px;padding:14px;font-size:16px;line-height:1.5;color:var(--note)}
+.time-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:12px}
+.time-row input{border:none;background:var(--chip);color:var(--ink);border-radius:8px;padding:9px 10px;font-family:inherit;font-size:16px;color-scheme:var(--scheme)}
 
 /* real phones: the app is the screen */
 @media (max-width:560px){
   .stage{padding:0;min-height:100dvh}
   .frame{width:100%;height:100dvh;border-radius:0;box-shadow:none}
-  .scroll{padding:calc(24px + env(safe-area-inset-top)) 26px calc(48px + env(safe-area-inset-bottom))}
+  .scroll{padding:calc(24px + env(safe-area-inset-top)) 20px calc(48px + env(safe-area-inset-bottom))}
+  /* the settings sheet becomes nearly full width so its text can grow */
+  .sheet{left:10px;right:10px;width:auto;top:76px;padding:18px 16px 22px;max-height:calc(100% - 96px)}
+}
+@media (max-width:380px){
+  .scroll{padding-left:14px;padding-right:14px}
 }
 </style>
 </head>
