@@ -78,7 +78,13 @@ button{font-family:inherit;cursor:pointer}
 .holiday{margin-top:22px;background:var(--chip);border-radius:12px;padding:13px 16px;font-size:13px;line-height:1.45;color:var(--note)}
 
 /* calendar */
-.cal{margin-top:38px}
+.cal{margin-top:38px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+@media (prefers-reduced-motion:no-preference){
+  .grid.anim-left{animation:cal-in-left .18s ease-out}
+  .grid.anim-right{animation:cal-in-right .18s ease-out}
+}
+@keyframes cal-in-left{from{transform:translateX(24px);opacity:.2}to{transform:none;opacity:1}}
+@keyframes cal-in-right{from{transform:translateX(-24px);opacity:.2}to{transform:none;opacity:1}}
 .cal-head{display:flex;align-items:baseline;justify-content:space-between}
 .cal-title{font-size:17px;font-weight:600;color:var(--ink)}
 .cal-nav{display:flex;gap:6px}
@@ -177,7 +183,7 @@ button{font-family:inherit;cursor:pointer}
 
       <div class="holiday" id="holidayNote" hidden></div>
 
-      <div class="cal">
+      <div class="cal" id="cal">
         <div class="cal-head">
           <div class="cal-title" id="monthLabel"></div>
           <div class="cal-nav">
@@ -603,8 +609,38 @@ button{font-family:inherit;cursor:pointer}
   $('doneBtn').addEventListener('click', () => { $('scrim').hidden = true; });
   $('scrim').addEventListener('click', () => { $('scrim').hidden = true; });
   $('sheet').addEventListener('click', (e) => e.stopPropagation());
-  $('prevBtn').addEventListener('click', () => { state.monthOffset--; renderCalendar(); });
-  $('nextBtn').addEventListener('click', () => { state.monthOffset++; renderCalendar(); });
+  const changeMonth = (delta) => {
+    state.monthOffset += delta;
+    renderCalendar();
+    const g = $('calGrid');
+    g.classList.remove('anim-left', 'anim-right');
+    void g.offsetWidth; // restart the slide animation
+    g.classList.add(delta > 0 ? 'anim-left' : 'anim-right');
+  };
+  $('prevBtn').addEventListener('click', () => changeMonth(-1));
+  $('nextBtn').addEventListener('click', () => changeMonth(1));
+  // swipe the calendar (touch or mouse drag) — mostly-horizontal moves only,
+  // so vertical page scrolling on top of it keeps working
+  let px = 0, py = 0, pActive = false;
+  $('cal').addEventListener('pointerdown', (e) => { px = e.clientX; py = e.clientY; pActive = true; });
+  $('cal').addEventListener('pointerup', (e) => {
+    if (!pActive) return;
+    pActive = false;
+    const dx = e.clientX - px, dy = e.clientY - py;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) changeMonth(dx < 0 ? 1 : -1);
+  });
+  // horizontal trackpad scroll; accumulate per gesture, one month per burst
+  let wAcc = 0, wLast = 0, wLock = 0;
+  $('cal').addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    const now = Date.now();
+    if (now - wLast > 400) wAcc = 0;
+    wLast = now;
+    if (now < wLock) return;
+    wAcc += e.deltaX;
+    if (Math.abs(wAcc) > 80) { changeMonth(wAcc > 0 ? 1 : -1); wAcc = 0; wLock = now + 500; }
+  }, { passive: false });
   $('themeSeg').addEventListener('click', (e) => {
     const v = e.target.dataset && e.target.dataset.val;
     if (!v) return;
