@@ -16,18 +16,15 @@
 :root{
   --page:#f2f2f0;--bg:#ffffff;--ink:#1d1d1f;--sub:#86868b;--faint:#b0aeab;
   --chip:#f5f5f3;--line:#f0efed;--note:#514f4d;
-  --frame-bg:#F2F2F7;--sb:#000;--home:rgba(0,0,0,0.25);
 }
 :root[data-theme="dark"]{
   --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#6e6e73;
   --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;
-  --frame-bg:#000;--sb:#fff;--home:rgba(255,255,255,0.7);
 }
 @media (prefers-color-scheme:dark){
   :root[data-theme="system"]{
     --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#6e6e73;
     --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;
-    --frame-bg:#000;--sb:#fff;--home:rgba(255,255,255,0.7);
   }
 }
 :root[data-scale="0.9"] [data-scale-region]{zoom:0.9}
@@ -42,23 +39,15 @@ button{font-family:inherit;cursor:pointer}
 
 .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 0}
 
-/* iOS 26 device frame (ported from the ios-frame starter) */
+/* centered app card on desktop; full-bleed on phones */
 .frame{
-  width:430px;height:880px;border-radius:48px;overflow:hidden;position:relative;flex:none;
-  background:var(--frame-bg);
+  width:430px;height:min(880px,calc(100dvh - 48px));border-radius:24px;overflow:hidden;position:relative;flex:none;
+  background:var(--bg);
   box-shadow:0 40px 80px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.12);
-  zoom:var(--fit,1);
 }
-.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:126px;height:37px;border-radius:24px;background:#000;z-index:50}
-.statusbar{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;gap:154px;align-items:center;justify-content:center;padding:21px 24px 19px;width:100%;color:var(--sb)}
-.statusbar .sb-time{flex:1;height:22px;display:flex;align-items:center;justify-content:center;padding-top:1.5px}
-.statusbar .sb-time span{font-family:-apple-system,"SF Pro",system-ui;font-weight:590;font-size:17px;line-height:22px}
-.statusbar .sb-icons{flex:1;height:22px;display:flex;align-items:center;justify-content:center;gap:7px;padding-top:1px;padding-right:1px}
-.homebar{position:absolute;bottom:0;left:0;right:0;z-index:60;height:34px;display:flex;justify-content:center;align-items:flex-end;padding-bottom:8px;pointer-events:none}
-.homebar i{width:139px;height:5px;border-radius:100px;background:var(--home)}
 
 .screen{position:relative;height:100%;background:var(--bg)}
-.scroll{height:100%;overflow-y:auto;padding:72px 26px 48px;scrollbar-width:none}
+.scroll{height:100%;overflow-y:auto;padding:32px 26px 48px;scrollbar-width:none}
 .scroll::-webkit-scrollbar{display:none}
 
 /* header */
@@ -139,11 +128,10 @@ button{font-family:inherit;cursor:pointer}
 .toggle i{width:24px;height:24px;border-radius:12px;background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.25);display:block}
 .seg.notify-time{margin-top:12px}
 
-/* real phones: the app is the screen — drop the fake bezel and chrome */
+/* real phones: the app is the screen */
 @media (max-width:560px){
   .stage{padding:0;min-height:100dvh}
-  .frame{width:100%;height:100dvh;border-radius:0;box-shadow:none;zoom:1}
-  .island,.statusbar,.homebar{display:none}
+  .frame{width:100%;height:100dvh;border-radius:0;box-shadow:none}
   .scroll{padding:calc(24px + env(safe-area-inset-top)) 26px calc(48px + env(safe-area-inset-bottom))}
 }
 </style>
@@ -151,29 +139,6 @@ button{font-family:inherit;cursor:pointer}
 <body>
 <div class="stage">
 <div class="frame">
-  <div class="island"></div>
-  <div class="statusbar">
-    <div class="sb-time"><span>9:41</span></div>
-    <div class="sb-icons">
-      <svg width="19" height="12" viewBox="0 0 19 12" fill="currentColor" aria-hidden="true">
-        <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7"/>
-        <rect x="4.8" y="5" width="3.2" height="7" rx="0.7"/>
-        <rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7"/>
-        <rect x="14.4" y="0" width="3.2" height="12" rx="0.7"/>
-      </svg>
-      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" aria-hidden="true">
-        <path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z"/>
-        <path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z"/>
-        <circle cx="8.5" cy="10.5" r="1.5"/>
-      </svg>
-      <svg width="27" height="13" viewBox="0 0 27 13" aria-hidden="true">
-        <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke="currentColor" stroke-opacity="0.35" fill="none"/>
-        <rect x="2" y="2" width="20" height="9" rx="2" fill="currentColor"/>
-        <path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill="currentColor" fill-opacity="0.4"/>
-      </svg>
-    </div>
-  </div>
-
   <div class="screen">
     <div class="scroll" data-scale-region>
       <div class="top">
@@ -263,8 +228,6 @@ button{font-family:inherit;cursor:pointer}
       </div>
     </div>
   </div>
-
-  <div class="homebar"><i></i></div>
 </div>
 </div>
 
@@ -592,17 +555,8 @@ button{font-family:inherit;cursor:pointer}
   });
   $('notifToggle').addEventListener('click', toggleNotify);
 
-  // desktop presentation: scale the device frame to fit short windows
-  const fit = () => {
-    if (window.innerWidth <= 560) { document.documentElement.style.removeProperty('--fit'); return; }
-    const s = Math.min(1, (window.innerHeight - 64) / 880, (window.innerWidth - 32) / 430);
-    document.documentElement.style.setProperty('--fit', s.toFixed(4));
-  };
-  window.addEventListener('resize', fit);
-
   // ── boot ───────────────────────────────────────────────────────
   applyTheme();
-  fit();
   renderAll();
   tick();
   setInterval(tick, 1000);
