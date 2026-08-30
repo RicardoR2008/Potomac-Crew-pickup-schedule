@@ -188,8 +188,8 @@ button{font-family:inherit;cursor:pointer}
         <div class="dow-row" id="dowRow"></div>
         <div class="grid" id="calGrid"></div>
         <div class="legend">
-          <div><span class="sw g"></span>Garbage &#183; Thursdays</div>
-          <div><span class="sw r"></span>Recycling &#183; every other Tuesday</div>
+          <div id="legG"><span class="sw g"></span>Garbage &#183; Thursdays</div>
+          <div id="legR"><span class="sw r"></span>Recycling &#183; every other Tuesday</div>
         </div>
       </div>
 
@@ -222,6 +222,13 @@ button{font-family:inherit;cursor:pointer}
           <button data-val="1.3">XL</button>
         </div>
         <div class="hint">Makes everything on the page larger or smaller.</div>
+        <div class="sect">PICKUPS</div>
+        <div class="seg" id="focusSeg">
+          <button data-val="both">Both</button>
+          <button data-val="garbage">Garbage</button>
+          <button data-val="recycling">Recycling</button>
+        </div>
+        <div class="hint">Show garbage days, recycling days, or both.</div>
         <div class="sect">NOTIFICATIONS</div>
         <div class="notif-row">
           <div class="notif-label">Pickup reminders</div>
@@ -278,6 +285,7 @@ button{font-family:inherit;cursor:pointer}
     notifyTime: LS.get('gc-notify-time') || 'evening',
     clockEvening: LS.get('gc-clock-evening') || '19:00',
     clockMorning: LS.get('gc-clock-morning') || '05:30',
+    focus: ['both', 'garbage', 'recycling'].indexOf(LS.get('gc-focus')) >= 0 ? LS.get('gc-focus') : 'both',
     notifPerm: typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
     pushActive: false,
   };
@@ -327,6 +335,8 @@ button{font-family:inherit;cursor:pointer}
   };
   const isActualG = (d) => (isG(d) && !weekHoliday(d)) || (isG(prevOf(d)) && !!weekHoliday(prevOf(d)));
   const isActualR = (d) => (isR(d) && !weekHoliday(d)) || (isR(prevOf(d)) && !!weekHoliday(prevOf(d)));
+  const showG = () => state.focus !== 'recycling';
+  const showR = () => state.focus !== 'garbage';
 
   const todayMidnight = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
   const fmt = (d) => WD[d.getDay()].slice(0, 3) + ', ' + MO[d.getMonth()].slice(0, 3) + ' ' + d.getDate();
@@ -353,10 +363,10 @@ button{font-family:inherit;cursor:pointer}
 
   const upcomingPickups = (T) => {
     const ups = [];
-    for (let i = 0; i < 70 && ups.length < 6; i++) {
+    for (let i = 0; i < 120 && ups.length < 6; i++) {
       const d = new Date(T.getTime() + i * DAY);
-      if (isG(d)) ups.push({ d, a: actualOf(d), type: 'Garbage', color: 'var(--ink)' });
-      if (isR(d)) ups.push({ d, a: actualOf(d), type: 'Recycling', color: ACCENT });
+      if (showG() && isG(d)) ups.push({ d, a: actualOf(d), type: 'Garbage', color: 'var(--ink)' });
+      if (showR() && isR(d)) ups.push({ d, a: actualOf(d), type: 'Recycling', color: ACCENT });
     }
     // a shifted pickup may already be done relative to today (e.g. viewing on the in-between day)
     return ups.filter((u) => u.a.day >= T);
@@ -369,10 +379,10 @@ button{font-family:inherit;cursor:pointer}
     const T = todayMidnight();
     const evening = state.notifyTime !== 'morning';
     const [ch, cm] = notifyClock().split(':').map(Number);
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 20; i++) {
       const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
-      const g = d.getDay() === gDow;
-      const r = isR(d);
+      const g = showG() && d.getDay() === gDow;
+      const r = showR() && isR(d);
       if (!g && !r) continue;
       const type = g && r ? 'Garbage & recycling' : g ? 'Garbage' : 'Recycling';
       const a = actualOf(d);
@@ -407,7 +417,7 @@ button{font-family:inherit;cursor:pointer}
       const r = await fetch('/.netlify/functions/subscribe', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ subscription: sub.toJSON(), time: state.notifyTime, clock: notifyClock() }),
+        body: JSON.stringify({ subscription: sub.toJSON(), time: state.notifyTime, clock: notifyClock(), focus: state.focus }),
       });
       if (r.ok) { state.pushActive = true; clearTimeout(notifTimer); renderSettings(); }
     } catch (e) {}
@@ -513,18 +523,21 @@ button{font-family:inherit;cursor:pointer}
       const cls = ['cell'];
       const hol = holOf(d);
       if (hol) cls.push('hol');
-      if (isActualG(d)) cls.push('g'); else if (isActualR(d)) cls.push('r');
+      if (showG() && isActualG(d)) cls.push('g'); else if (showR() && isActualR(d)) cls.push('r');
       if (d.getTime() === T.getTime()) cls.push('today');
       const title = hol ? ' title="' + esc(hol) + ' — no pickup"' : '';
       html += '<div class="' + cls.join(' ') + '"' + title + '><div class="n">' + n + '</div><div class="u">' + (hol ? '<i></i>' : '') + '</div></div>';
     }
     $('calGrid').innerHTML = html;
+    $('legG').hidden = !showG();
+    $('legR').hidden = !showR();
   };
 
   const renderSettings = () => {
     const themeProp = state.theme || 'System';
     for (const b of $('themeSeg').children) b.classList.toggle('on', b.dataset.val === themeProp);
     for (const b of $('scaleSeg').children) b.classList.toggle('on', parseFloat(b.dataset.val) === state.scale);
+    for (const b of $('focusSeg').children) b.classList.toggle('on', b.dataset.val === state.focus);
     const notifyOn = state.notify && state.notifPerm === 'granted';
     $('notifToggle').classList.toggle('on', notifyOn);
     $('modeLabel').hidden = !notifyOn;
@@ -563,12 +576,14 @@ button{font-family:inherit;cursor:pointer}
     const dayKey = now.toDateString();
     if (dayKey !== lastDayKey) { lastDayKey = dayKey; renderAll(); }
 
-    // countdown to the next garbage carts-out deadline (6:00 AM)
+    // countdown to the next carts-out deadline (6:00 AM); recycling-only focus counts to recycling
+    const wantR = state.focus === 'recycling';
+    const isDue = wantR ? isActualR : isActualG;
     const T = todayMidnight();
     let target = null, targetDate = null;
-    for (let i = 0; i < 10 && !target; i++) {
+    for (let i = 0; i < 20 && !target; i++) {
       const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
-      if (isActualG(d)) {
+      if (isDue(d)) {
         const t6 = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 6, 0, 0);
         if (t6 > now) { target = t6; targetDate = d; }
       }
@@ -578,7 +593,7 @@ button{font-family:inherit;cursor:pointer}
     $('cd1').textContent = p2(Math.floor(left / 36e5) % 24);
     $('cd2').textContent = p2(Math.floor(left / 6e4) % 60);
     $('cd3').textContent = p2(Math.floor(left / 1e3) % 60);
-    $('cdCaption').textContent = targetDate ? 'Until garbage carts are due out · ' + fmt(targetDate) + ', 6:00 AM' : '';
+    $('cdCaption').textContent = targetDate ? 'Until ' + (wantR ? 'recycling' : 'garbage') + ' carts are due out · ' + fmt(targetDate) + ', 6:00 AM' : '';
   };
 
   // ── wiring ─────────────────────────────────────────────────────
@@ -607,6 +622,15 @@ button{font-family:inherit;cursor:pointer}
     renderSettings();
   });
   $('notifToggle').addEventListener('click', toggleNotify);
+  $('focusSeg').addEventListener('click', (e) => {
+    const v = e.target.dataset && e.target.dataset.val;
+    if (!v) return;
+    state.focus = v; LS.set('gc-focus', v);
+    renderAll();
+    tick();
+    scheduleNotif();
+    if (state.pushActive) pushSubscribe();
+  });
   $('clockInput').addEventListener('change', (e) => {
     const v = snap15(e.target.value);
     if (!v) { renderSettings(); return; }

@@ -35,7 +35,9 @@ export default async () => {
     const rec = await store.get(b.key, { type: 'json' });
     if (!rec) continue;
     const mode = (rec.time || 'evening') === 'morning' ? 'morning' : 'evening';
-    const types = typesByMode[mode];
+    let types = typesByMode[mode];
+    if (rec.focus === 'garbage') types = types.filter((t) => t === 'Garbage');
+    else if (rec.focus === 'recycling') types = types.filter((t) => t === 'Recycling');
     if (!types.length) continue;
     const clock = /^([01]\d|2[0-3]):[0-5]\d$/.test(rec.clock || '') ? rec.clock : DEFAULT_CLOCK[mode];
     const [ch, cm] = clock.split(':').map(Number);
