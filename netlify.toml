@@ -1,3 +1,9 @@
 [build]
   publish = "site"
   functions = "netlify/functions"
+
+# Serve exactly what is committed. Netlify's post-processing was rewriting the
+# markup (re-quoting attributes and stripping .html from links), which made the
+# deployed file differ from the source for no benefit.
+[build.processing]
+  skip_processing = true
