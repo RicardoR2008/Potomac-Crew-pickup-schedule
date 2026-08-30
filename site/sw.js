@@ -1,7 +1,7 @@
 // Service worker: delivers push reminders and keeps the app usable offline.
 // Network-first for the page itself so a new deploy is never masked by cache.
-const CACHE = 'pickup-v1';
-const ASSETS = ['/', '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png', '/manifest.webmanifest'];
+const CACHE = 'pickup-v2';
+const ASSETS = ['/', '/favicon-64.png', '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).catch(() => {}).then(() => self.skipWaiting()));
