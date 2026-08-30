@@ -96,6 +96,9 @@ button{font-family:inherit;cursor:pointer}
 .cell.blank .n{width:auto;height:auto}
 .cell.hol .n{color:var(--faint)}
 .cell.hol .u i{width:5px;height:5px;border-radius:50%;background:var(--faint);display:block}
+.cell:not(.blank){cursor:pointer}
+.cell.sel .n{box-shadow:inset 0 0 0 2px var(--sub)}
+.day-note{margin-top:10px;background:var(--chip);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;color:var(--note)}
 .cell.g .n{background:#3EC163;color:#14161a;font-weight:600}
 .cell.r .n{background:#5FC9EE;color:#14161a;font-weight:600}
 .cell.today .n{box-shadow:inset 0 0 0 2px var(--ink);font-weight:600}
@@ -193,6 +196,7 @@ button{font-family:inherit;cursor:pointer}
         </div>
         <div class="dow-row" id="dowRow"></div>
         <div class="grid" id="calGrid"></div>
+        <div class="day-note" id="dayNote" hidden></div>
         <div class="legend">
           <div id="legG"><span class="sw g"></span>Garbage &#183; Thursdays</div>
           <div id="legR"><span class="sw r"></span>Recycling &#183; every other Tuesday</div>
@@ -284,6 +288,7 @@ button{font-family:inherit;cursor:pointer}
 
   const state = {
     monthOffset: 0,
+    selDay: null,
     live: null,
     theme: LS.get('gc-theme') || null,
     scale: parseFloat(LS.get('gc-scale')) || 1,
@@ -532,13 +537,61 @@ button{font-family:inherit;cursor:pointer}
       const hol = holOf(d);
       if (hol) cls.push('hol');
       if (showG() && isActualG(d)) cls.push('g'); else if (showR() && isActualR(d)) cls.push('r');
+      if (n === state.selDay) cls.push('sel');
       if (d.getTime() === T.getTime()) cls.push('today');
       const title = hol ? ' title="' + esc(hol) + ' — no pickup"' : '';
-      html += '<div class="' + cls.join(' ') + '"' + title + '><div class="n">' + n + '</div><div class="u">' + (hol ? '<i></i>' : '') + '</div></div>';
+      html += '<div class="' + cls.join(' ') + '"' + title + ' data-d="' + n + '"><div class="n">' + n + '</div><div class="u">' + (hol ? '<i></i>' : '') + '</div></div>';
     }
     $('calGrid').innerHTML = html;
     $('legG').hidden = !showG();
     $('legR').hidden = !showR();
+    const note = $('dayNote');
+    if (state.selDay && state.selDay <= dim) {
+      note.hidden = false;
+      note.textContent = composeDayNote(new Date(vm.getFullYear(), vm.getMonth(), state.selDay));
+    } else {
+      state.selDay = null;
+      note.hidden = true;
+    }
+  };
+
+  // plain-language explanation of one tapped calendar day
+  const composeDayNote = (d) => {
+    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    const hol = holOf(d);
+    const long = fmtLong(d);
+    const acts = [];
+    if (showG() && isActualG(d)) acts.push('Garbage');
+    if (showR() && isActualR(d)) acts.push('Recycling');
+    const away = [];
+    if (showG() && isG(d) && weekHoliday(d)) away.push('garbage');
+    if (showR() && isR(d) && weekHoliday(d)) away.push('recycling');
+    const out = [];
+    if (hol) out.push(long + ' is ' + hol + ' — no pickups on city holidays, so the rest of that week runs one day late.');
+    if (acts.length) {
+      const ph = acts.map((t) => {
+        const schedToday = t === 'Garbage' ? (isG(d) && !weekHoliday(d)) : (isR(d) && !weekHoliday(d));
+        if (schedToday) return t.toLowerCase() + ' pickup';
+        const from = prevOf(d);
+        return t.toLowerCase() + ' pickup, moved from ' + WD[from.getDay()] + ' (' + weekHoliday(from) + ' week)';
+      });
+      out.push((hol ? '' : long + ' — ') + ph.join(' and ') + '. Carts out by 6 AM.');
+    } else if (away.length && hol) {
+      const to = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+      out.push(cap(away.join(' & ')) + ' moves to ' + fmtLong(to) + '.');
+    } else if (away.length) {
+      const to = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+      out.push(long + ' — no ' + away.join(' or ') + ' this day: ' + weekHoliday(d) + ' week pushes it to ' + fmtLong(to) + '.');
+    } else if (!hol) {
+      let nxt = null;
+      for (let i = 1; i <= 21 && !nxt; i++) {
+        const e2 = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+        if (showG() && isActualG(e2)) nxt = { t: 'garbage', d: e2 };
+        else if (showR() && isActualR(e2)) nxt = { t: 'recycling', d: e2 };
+      }
+      out.push(long + ' — no pickup.' + (nxt ? ' Next: ' + nxt.t + ' on ' + fmt(nxt.d) + '.' : ''));
+    }
+    return out.join(' ');
   };
 
   const renderSettings = () => {
@@ -611,6 +664,7 @@ button{font-family:inherit;cursor:pointer}
   $('sheet').addEventListener('click', (e) => e.stopPropagation());
   const changeMonth = (delta) => {
     state.monthOffset += delta;
+    state.selDay = null;
     renderCalendar();
     const g = $('calGrid');
     g.classList.remove('anim-left', 'anim-right');
@@ -619,6 +673,13 @@ button{font-family:inherit;cursor:pointer}
   };
   $('prevBtn').addEventListener('click', () => changeMonth(-1));
   $('nextBtn').addEventListener('click', () => changeMonth(1));
+  $('calGrid').addEventListener('click', (e) => {
+    const cell = e.target && e.target.closest ? e.target.closest('[data-d]') : null;
+    if (!cell) return;
+    const n = +cell.dataset.d;
+    state.selDay = state.selDay === n ? null : n;
+    renderCalendar();
+  });
   // swipe the calendar (touch or mouse drag) — mostly-horizontal moves only,
   // so vertical page scrolling on top of it keeps working
   let px = 0, py = 0, pActive = false;
