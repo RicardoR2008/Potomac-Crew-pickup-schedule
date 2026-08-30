@@ -11,6 +11,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pickup">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d1d1f'/%3E%3Ccircle cx='22' cy='32' r='8' fill='%233EC163'/%3E%3Ccircle cx='42' cy='32' r='8' fill='%235FC9EE'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -89,7 +91,8 @@ button{font-family:inherit;cursor:pointer}
 @keyframes cal-in-right{from{transform:translateX(-24px);opacity:.2}to{transform:none;opacity:1}}
 .cal-head{display:flex;align-items:baseline;justify-content:space-between}
 .cal-title{font-size:17px;font-weight:600;color:var(--ink)}
-.cal-nav{display:flex;gap:6px}
+.cal-nav{display:flex;gap:14px}
+#prevBtn,#nextBtn{width:40px;height:40px;border-radius:20px;font-size:20px;display:flex;align-items:center;justify-content:center}
 .dow-row{display:grid;grid-template-columns:repeat(7,1fr);margin-top:16px}
 .dow-row div{text-align:center;font-size:11px;font-weight:600;color:var(--faint);padding-bottom:8px}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px}
@@ -414,6 +417,22 @@ button{font-family:inherit;cursor:pointer}
   const p2 = (x) => String(x).padStart(2, '0');
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
   const notifyClock = () => (state.notifyTime === 'morning' ? state.clockMorning : state.clockEvening);
+  // "blocked" is fixed in a different place on every platform — say which one
+  const blockedHelp = () => {
+    const ua = navigator.userAgent || '';
+    const installed = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+    if (/iPhone|iPad|iPod/.test(ua)) {
+      return installed
+        ? 'Notifications are turned off. Open the phone’s Settings app → Notifications → Pickup, and turn Allow Notifications on.'
+        : 'Notifications are blocked. Add this page to your Home Screen first (Share → Add to Home Screen), then open it from that icon and turn reminders on.';
+    }
+    if (/Android/.test(ua)) {
+      return installed
+        ? 'Notifications are turned off. Press and hold the Pickup icon → App info → Notifications, and turn them on.'
+        : 'Notifications are blocked. Tap the icon to the left of the web address → Permissions → Notifications → Allow, then turn reminders on again.';
+    }
+    return 'Notifications are blocked. Click the icon to the left of the web address → Notifications → Allow, then reload this page and turn reminders on again.';
+  };
   // reminders ride a 15-minute server schedule, so times snap to :00/:15/:30/:45
   const snap15 = (v) => {
     const m = /^(\d{1,2}):(\d{2})$/.exec(v || '');
@@ -694,7 +713,7 @@ button{font-family:inherit;cursor:pointer}
     let status = 'Get a heads-up before each pickup.';
     let asNote = false;
     if (state.notifPerm === 'unsupported') status = 'Notifications aren’t available in this browser view.';
-    else if (state.notifPerm === 'denied') status = 'Notifications are blocked — allow them in browser settings.';
+    else if (state.notifPerm === 'denied') status = blockedHelp();
     else if (notifyOn) {
       const nx = reminderTarget();
       if (nx) {
@@ -839,6 +858,12 @@ button{font-family:inherit;cursor:pointer}
 
   scheduleNotif();
   if (state.notify && typeof Notification !== 'undefined' && Notification.permission === 'granted') pushSubscribe();
+
+  // register the service worker on every load: it makes this a real installable
+  // app (a proper home-screen icon, no browser badge) and keeps it usable offline
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+  }
 })();
 </script>
 </body>
