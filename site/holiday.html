@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en" data-theme="system" data-scale="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Holidays — Pickup Schedule</title>
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f0">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png">
+<style>
+/* Same warm, high-contrast palette as the main screen. */
+:root{
+  --page:#f2f2f0;--bg:#ffffff;--ink:#111111;--sub:#3b2f2f;--faint:#4b3621;
+  --chip:#f5f5f3;--line:#f0efed;--note:#3b2f2f;
+  --good:#1c6b34;--move:#8a4b12;
+}
+:root[data-theme="dark"]{
+  --page:#000000;--bg:#161618;--ink:#fffdf8;--sub:#f2e8d5;--faint:#ead9c0;
+  --chip:#232327;--line:#2a2a2e;--note:#f2e8d5;
+  --good:#7fe0a0;--move:#f5c98a;
+}
+@media (prefers-color-scheme:dark){
+  :root[data-theme="system"]{
+    --page:#000000;--bg:#161618;--ink:#fffdf8;--sub:#f2e8d5;--faint:#ead9c0;
+    --chip:#232327;--line:#2a2a2e;--note:#f2e8d5;
+    --good:#7fe0a0;--move:#f5c98a;
+  }
+}
+:root[data-scale="0.9"] [data-scale-region]{zoom:0.9}
+:root[data-scale="1.15"] [data-scale-region]{zoom:1.15}
+:root[data-scale="1.3"] [data-scale-region]{zoom:1.3}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 0}
+.frame{width:430px;height:min(880px,calc(100dvh - 48px));border-radius:24px;overflow:hidden;position:relative;flex:none;background:var(--bg);box-shadow:0 40px 80px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.12)}
+.scroll{height:100%;overflow-y:auto;padding:32px 26px 56px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+
+.backrow{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.back{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 16px 8px 12px;border-radius:22px;background:var(--chip);color:var(--ink);font-size:17px;font-weight:600;text-decoration:none;border:none;cursor:pointer;font-family:inherit}
+h1{font-size:32px;line-height:1.15;font-weight:700;color:var(--ink);margin:0 0 10px;letter-spacing:-0.01em}
+.lede{font-size:17px;line-height:1.55;color:var(--sub);margin:0 0 6px}
+.addr{font-size:16px;color:var(--faint);margin:0 0 26px;line-height:1.5}
+
+.card{background:var(--chip);border-radius:16px;padding:20px;margin-bottom:18px}
+.card h2{font-size:23px;line-height:1.2;font-weight:700;color:var(--ink);margin:0 0 4px}
+.when{font-size:17px;color:var(--sub);margin:0 0 16px}
+.verdict{font-size:19px;font-weight:700;line-height:1.35;margin:0 0 14px}
+.verdict.same{color:var(--good)}
+.verdict.moved{color:var(--move)}
+.rows{border-top:1px solid var(--line);padding-top:14px}
+.row{display:flex;gap:12px;padding:10px 0;align-items:flex-start}
+.row + .row{border-top:1px solid var(--line)}
+.sw{width:18px;height:18px;border-radius:5px;flex:none;margin-top:3px}
+.sw.g{background:#3EC163}
+.sw.r{background:#5FC9EE}
+.rowmain{flex:1;min-width:0}
+.rowtitle{font-size:18px;font-weight:600;color:var(--ink);line-height:1.3}
+.rowline{font-size:17px;color:var(--sub);margin-top:4px;line-height:1.45}
+.rowout{font-size:17px;color:var(--ink);margin-top:8px;line-height:1.45;font-weight:600}
+.strike{text-decoration:line-through}
+.empty{font-size:17px;color:var(--sub);line-height:1.5}
+.foot{font-size:16px;line-height:1.55;color:var(--faint);margin-top:26px}
+.loading{font-size:18px;color:var(--sub);padding:20px 0}
+
+@media (max-width:560px){
+  .stage{padding:0;min-height:100dvh}
+  .frame{width:100%;height:100dvh;border-radius:0;box-shadow:none}
+  .scroll{padding:calc(24px + env(safe-area-inset-top)) 20px calc(56px + env(safe-area-inset-bottom))}
+}
+@media (max-width:380px){ .scroll{padding-left:14px;padding-right:14px} }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="frame">
+    <div class="scroll" data-scale-region>
+      <div class="backrow"><a class="back" href="/" id="backBtn">&#8249;&nbsp; Back</a></div>
+      <h1>Holidays and your pickup</h1>
+      <p class="lede">Holidays sometimes change the day your carts are collected — and sometimes they change nothing at all. Here is exactly what happens for each holiday.</p>
+      <p class="addr">4248 W. Potomac Ave &middot; taken from the city schedule, not from a guess.</p>
+      <div id="list"><p class="loading">Loading your schedule…</p></div>
+      <p class="foot" id="foot"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const LS = {
+    get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
+  };
+  // match the main screen's appearance and text-size settings
+  const theme = LS.get('gc-theme') || 'System';
+  document.documentElement.setAttribute('data-theme', theme.toLowerCase() === 'day' ? 'light' : theme.toLowerCase() === 'night' ? 'dark' : 'system');
+  document.documentElement.setAttribute('data-scale', String(parseFloat(LS.get('gc-scale')) || 1));
+  const focus = ['both', 'garbage', 'recycling'].indexOf(LS.get('gc-focus')) >= 0 ? LS.get('gc-focus') : 'both';
+
+  const WD = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MO = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const parse = (iso) => new Date(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10));
+  const isoOf = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const longDate = (d) => WD[d.getDay()] + ', ' + MO[d.getMonth()] + ' ' + d.getDate();
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+
+  const SCHED_KEY = 'gc-sched-v1';
+  const getJSON = (url, opts) => fetch(url, opts).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+
+  // same three layers as the main screen: live -> this browser's copy -> bundled snapshot
+  const loadSchedule = async () => {
+    const live = await getJSON('/.netlify/functions/schedule', { cache: 'no-store' });
+    if (live && live.ok && Array.isArray(live.collections)) {
+      const checked = new Date().toISOString().slice(0, 10);
+      LS.set(SCHED_KEY, JSON.stringify({ collections: live.collections, coverage: live.coverage, checked }));
+      return { data: live, origin: 'live' };
+    }
+    try {
+      const cached = JSON.parse(LS.get(SCHED_KEY) || 'null');
+      if (cached && Array.isArray(cached.collections)) return { data: cached, origin: 'cache' };
+    } catch (e) {}
+    const snap = await getJSON('/schedule-snapshot.json', { cache: 'force-cache' });
+    if (snap && Array.isArray(snap.collections)) return { data: snap, origin: 'snapshot' };
+    return null;
+  };
+
+  const render = (sched, hol) => {
+    const set = new Set(sched.collections.map((c) => c.d + '|' + c.t));
+    const coverage = sched.coverage || {};
+    const has = (d, t) => set.has(isoOf(d) + '|' + t);
+    const baseG = (d) => d.getDay() === 4;
+    const ANCHOR = new Date(2026, 7, 11);
+    const baseR = (d) => d.getDay() === 2 && ((Math.round((d - ANCHOR) / 864e5) % 14) + 14) % 14 === 0;
+    const types = focus === 'garbage' ? ['Garbage'] : focus === 'recycling' ? ['Recycling'] : ['Garbage', 'Recycling'];
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const upcoming = hol.holidays
+      .map((h) => ({ ...h, date: parse(h.d) }))
+      .filter((h) => h.date >= addDays(today, -3))
+      .filter((h) => !coverage.to || h.d <= coverage.to)
+      .slice(0, 10);
+
+    if (!upcoming.length) { $('list').innerHTML = '<p class="empty">No holidays are coming up in the published schedule.</p>'; return; }
+
+    const cards = upcoming.map((h) => {
+      // everything the city collects in that holiday's Monday-Sunday week
+      const monday = addDays(h.date, -((h.date.getDay() + 6) % 7));
+      const items = [];
+      for (let i = 0; i < 7; i++) {
+        const d = addDays(monday, i);
+        for (const t of types) {
+          if (!has(d, t)) continue;
+          const isBase = t === 'Garbage' ? baseG : baseR;
+          let usual = null;
+          if (!isBase(d)) {
+            for (let j = 0; j < 7; j++) {
+              const c = addDays(monday, j);
+              if (isBase(c) && !has(c, t)) { usual = c; break; }
+            }
+          }
+          items.push({ type: t, day: d, usual });
+        }
+      }
+      const moved = items.filter((i) => i.usual);
+      const verdict = moved.length
+        ? '<p class="verdict moved">Your pickup day changes this week.</p>'
+        : items.length
+          ? '<p class="verdict same">Good news — nothing changes this week.</p>'
+          : '<p class="verdict same">No collection is scheduled that week.</p>';
+
+      const rows = items.map((it) => {
+        const cls = it.type === 'Garbage' ? 'g' : 'r';
+        const nightBefore = addDays(it.day, -1);
+        const line = it.usual
+          ? 'Normally <span class="strike">' + esc(WD[it.usual.getDay()]) + '</span> &rarr; <strong>this week ' + esc(longDate(it.day)) + '</strong>'
+          : 'Same as always: <strong>' + esc(longDate(it.day)) + '</strong>';
+        return '<div class="row"><span class="sw ' + cls + '"></span><div class="rowmain">' +
+          '<div class="rowtitle">' + esc(it.type) + '</div>' +
+          '<div class="rowline">' + line + '</div>' +
+          '<div class="rowout">Put the cart out by 6&nbsp;AM on ' + esc(longDate(it.day)) +
+          ' — easiest is the night before, ' + esc(WD[nightBefore.getDay()]) + ' evening.</div>' +
+          '</div></div>';
+      }).join('');
+
+      return '<div class="card">' +
+        '<h2>' + esc(h.emoji) + ' ' + esc(h.name) + '</h2>' +
+        '<p class="when">' + esc(longDate(h.date)) + ', ' + h.date.getFullYear() + '</p>' +
+        verdict +
+        (rows ? '<div class="rows">' + rows + '</div>' : '') +
+        '</div>';
+    }).join('');
+
+    $('list').innerHTML = cards;
+    const originText = sched.origin === 'live'
+      ? 'These dates come straight from the city schedule published by Recycle by City, checked just now.'
+      : sched.origin === 'cache'
+        ? 'These dates come from the city schedule, last checked ' + esc(sched.checked || 'recently') + '.'
+        : 'These dates come from the city schedule saved with this app.';
+    $('foot').textContent = originText + ' The city does not move every pickup after a holiday — often your day does not change at all.';
+  };
+
+  loadSchedule().then((res) => {
+    if (!res) { $('list').innerHTML = '<p class="empty">Could not load the schedule. Please check your connection and try again.</p>'; return; }
+    getJSON('/holidays.json', { cache: 'force-cache' }).then((hol) => {
+      if (!hol || !Array.isArray(hol.holidays)) { $('list').innerHTML = '<p class="empty">Could not load the holiday list.</p>'; return; }
+      render({ ...res.data, origin: res.origin, checked: res.data.checked }, hol);
+    });
+  });
+})();
+</script>
+</body>
+</html>

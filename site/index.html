@@ -67,6 +67,10 @@ button{font-family:inherit;cursor:pointer}
 .chip-btn{border:none;background:var(--chip);color:var(--ink);width:30px;height:30px;border-radius:15px;font-size:15px;padding:0;flex:none}
 /* the settings gear is a primary control and a frequent tap target — size it up */
 #gearBtn{width:44px;height:44px;border-radius:22px;font-size:22px;display:flex;align-items:center;justify-content:center}
+/* a plain-language shortcut to the holiday explanations */
+.hol-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:22px;background:var(--chip);color:var(--ink);font-size:17px;font-weight:600;text-decoration:none;flex:none}
+.hol-btn:hover{color:var(--ink)}
+.now-actions{display:flex;align-items:center;gap:10px;flex:none}
 .eyebrow{font-size:14px;letter-spacing:0.10em;color:var(--sub);font-weight:600}
 .address{font-size:19px;font-weight:600;color:var(--ink);margin-top:3px}
 
@@ -185,7 +189,10 @@ button{font-family:inherit;cursor:pointer}
       <div class="top">
         <div class="now-row">
           <div class="now-line" id="nowLine"></div>
-          <button class="chip-btn" id="gearBtn" aria-label="Settings">&#9881;&#65038;</button>
+          <div class="now-actions">
+            <a class="hol-btn" id="holBtn" href="/holiday.html">Holiday?</a>
+            <button class="chip-btn" id="gearBtn" aria-label="Settings">&#9881;&#65038;</button>
+          </div>
         </div>
         <div class="eyebrow">PICKUP SCHEDULE</div>
         <div class="address">4248 W. Potomac Ave</div>
@@ -415,7 +422,6 @@ button{font-family:inherit;cursor:pointer}
   const isEstimated = (d) => !covers(d); // beyond the published schedule
   const holOf = (d) => holidaysFor(d.getFullYear())[d.getMonth() + '-' + d.getDate()] || null;
   // Holidays are shown and themed, but they no longer decide collection dates.
-  const prevOf = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
   // A collection is 'moved' when it is not on its usual weekday. The published
   // schedule says where it went; we only work out where it came from, by finding
   // the usual day in the same Mon-Sun week that has no collection of its own.
@@ -779,6 +785,7 @@ button{font-family:inherit;cursor:pointer}
       }
       out.push(long + ' — no pickup.' + (nxt ? ' Next: ' + nxt.t + ' on ' + fmt(nxt.d) + '.' : ''));
     }
+    if (isEstimated(d)) out.push('This is our estimate from the usual weekly pattern - it is past the end of the city’s published schedule.');
     return out.join(' ');
   };
 
