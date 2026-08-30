@@ -55,6 +55,8 @@ button{font-family:inherit;cursor:pointer}
 .now-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .now-line{font-size:13px;color:var(--sub)}
 .chip-btn{border:none;background:var(--chip);color:var(--ink);width:30px;height:30px;border-radius:15px;font-size:15px;padding:0}
+/* the settings gear is a primary control and a frequent tap target — size it up */
+#gearBtn{width:44px;height:44px;border-radius:22px;font-size:22px;display:flex;align-items:center;justify-content:center}
 .eyebrow{font-size:11px;letter-spacing:0.14em;color:var(--sub);font-weight:600}
 .address{font-size:17px;font-weight:600;color:var(--ink);margin-top:3px}
 
@@ -94,8 +96,7 @@ button{font-family:inherit;cursor:pointer}
 .cell{height:42px;display:flex;flex-direction:column;align-items:center;gap:3px}
 .cell .n{width:34px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:400;color:var(--ink)}
 .cell.blank .n{width:auto;height:auto}
-.cell.hol .n{color:var(--faint)}
-.cell.hol .u i{width:5px;height:5px;border-radius:50%;background:var(--faint);display:block}
+.cell.hol .u .hem{font-size:10px;line-height:1;display:block}
 .cell:not(.blank){cursor:pointer}
 .cell.sel .n{box-shadow:inset 0 0 0 2px var(--sub)}
 .day-note{margin-top:10px;background:var(--chip);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;color:var(--note)}
@@ -275,15 +276,63 @@ button{font-family:inherit;cursor:pointer}
   const DAY = 864e5;
   const MO = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const WD = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  // Chicago city holidays (pickup pauses; rest of that week runs a day late)
-  const HOLS = {
-    '2026-0-1': "New Year's Day", '2026-0-19': 'MLK Day', '2026-1-12': "Lincoln's Birthday",
-    '2026-2-2': 'Pulaski Day', '2026-4-25': 'Memorial Day', '2026-5-19': 'Juneteenth',
-    '2026-6-3': 'Independence Day (obs.)', '2026-8-7': 'Labor Day', '2026-9-12': 'Columbus Day',
-    '2026-10-11': 'Veterans Day', '2026-10-26': 'Thanksgiving', '2026-11-25': 'Christmas Day',
-    '2027-0-1': "New Year's Day", '2027-0-18': 'MLK Day', '2027-1-12': "Lincoln's Birthday",
-    '2027-2-1': 'Pulaski Day', '2027-4-31': 'Memorial Day', '2027-5-18': 'Juneteenth (obs.)',
-    '2027-6-5': 'Independence Day (obs.)', '2027-8-6': 'Labor Day',
+  // ── American holidays, computed by rule so the app never runs out ──
+  // service:true  = Chicago suspends collection; that day and the rest of
+  //                 the week run one day late.
+  // service:false = observed and themed, but collection runs normally.
+  const nthWeekday = (y, m, dow, nth) => {
+    if (nth < 0) { // last <dow> of the month
+      const last = new Date(y, m + 1, 0);
+      return new Date(y, m, last.getDate() - ((last.getDay() - dow + 7) % 7));
+    }
+    const first = new Date(y, m, 1);
+    return new Date(y, m, 1 + ((dow - first.getDay() + 7) % 7) + (nth - 1) * 7);
+  };
+  // federal weekend rule: Saturday → observed Friday, Sunday → observed Monday
+  const observed = (d) => {
+    const w = d.getDay();
+    if (w === 6) return { d: new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1), moved: true };
+    if (w === 0) return { d: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), moved: true };
+    return { d, moved: false };
+  };
+  const on = (d) => ({ d, moved: false });
+  const HOLIDAYS = [
+    { name: "New Year's Day", emoji: '🎉', tint: '#c9a227', service: true, at: (y) => observed(new Date(y, 0, 1)) },
+    { name: 'MLK Day', emoji: '✊', tint: '#5b6ee1', service: true, at: (y) => on(nthWeekday(y, 0, 1, 3)) },
+    { name: 'Inauguration Day', emoji: '🇺🇸', tint: '#4a7fd1', service: false, at: (y) => (y % 4 === 1 ? on(new Date(y, 0, 20)) : null) },
+    { name: "Lincoln's Birthday", emoji: '🎩', tint: '#7a6b8f', service: true, at: (y) => on(new Date(y, 1, 12)) },
+    { name: 'Presidents Day', emoji: '🏛️', tint: '#4a7fd1', service: false, at: (y) => on(nthWeekday(y, 1, 1, 3)) },
+    { name: 'Pulaski Day', emoji: '🎗️', tint: '#a8577a', service: true, at: (y) => on(nthWeekday(y, 2, 1, 1)) },
+    { name: 'Memorial Day', emoji: '🌺', tint: '#c25b5b', service: true, at: (y) => on(nthWeekday(y, 4, 1, -1)) },
+    { name: 'Juneteenth', emoji: '🕊️', tint: '#3f7d54', service: true, at: (y) => observed(new Date(y, 5, 19)) },
+    { name: 'Independence Day', emoji: '🎆', tint: '#c25b5b', service: true, at: (y) => observed(new Date(y, 6, 4)) },
+    { name: 'Labor Day', emoji: '🛠️', tint: '#8a6d3b', service: true, at: (y) => on(nthWeekday(y, 8, 1, 1)) },
+    { name: 'Columbus Day', emoji: '⛵', tint: '#3f7d8a', service: true, at: (y) => on(nthWeekday(y, 9, 1, 2)) },
+    { name: 'Veterans Day', emoji: '🎖️', tint: '#6b7a52', service: true, at: (y) => observed(new Date(y, 10, 11)) },
+    { name: 'Thanksgiving', emoji: '🦃', tint: '#b5761f', service: true, at: (y) => on(nthWeekday(y, 10, 4, 4)) },
+    { name: 'Christmas Day', emoji: '🎄', tint: '#3f7d54', service: true, at: (y) => observed(new Date(y, 11, 25)) },
+  ];
+  const holCache = {};
+  // Keyed by the date a holiday is OBSERVED, which can fall in a neighbouring
+  // year — Jan 1 on a Saturday is observed Dec 31 of the year before — so
+  // neighbouring years are scanned and filtered to the ones landing in y.
+  const holidaysFor = (y) => {
+    if (!holCache[y]) {
+      const map = {};
+      for (const yr of [y - 1, y, y + 1]) for (const h of HOLIDAYS) {
+        const r = h.at(yr);
+        if (!r || r.d.getFullYear() !== y) continue;
+        const key = r.d.getMonth() + '-' + r.d.getDate();
+        const entry = { name: h.name + (r.moved ? ' (obs.)' : ''), emoji: h.emoji, tint: h.tint, service: h.service };
+        // two holidays can land on the same date (e.g. MLK Day and Inauguration
+        // Day in 2025) — merge instead of overwriting, and never lose service:true
+        map[key] = map[key]
+          ? { ...map[key], name: map[key].name + ' & ' + entry.name, service: map[key].service || entry.service }
+          : entry;
+      }
+      holCache[y] = map;
+    }
+    return holCache[y];
   };
 
   const state = {
@@ -326,12 +375,13 @@ button{font-family:inherit;cursor:pointer}
     const diff = Math.round((d - anchor) / DAY);
     return ((diff % 14) + 14) % 14 === 0;
   };
-  const holOf = (d) => HOLS[d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate()];
-  // holiday earlier in the same Mon-Sun week, on or before pickup day
+  const holOf = (d) => holidaysFor(d.getFullYear())[d.getMonth() + '-' + d.getDate()] || null;
+  const serviceHolOf = (d) => { const h = holOf(d); return h && h.service ? h : null; };
+  // service holiday earlier in the same Mon-Sun week, on or before pickup day
   const weekHoliday = (d) => {
     for (let i = 0; i <= (d.getDay() + 6) % 7; i++) {
       const p = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i);
-      const h = holOf(p);
+      const h = serviceHolOf(p);
       if (h) return h;
     }
     return null;
@@ -503,7 +553,7 @@ button{font-family:inherit;cursor:pointer}
     $('thenLine').textContent = then ? 'Then ' + then.type.toLowerCase() + ' on ' + fmt(then.a.day) : '';
     $('holidayNote').hidden = !hero.a.moved;
     if (hero.a.moved) {
-      $('holidayNote').textContent = hero.a.hol + ' week: there is no pickup on the holiday, so everything runs one day late. ' +
+      $('holidayNote').textContent = hero.a.hol.emoji + ' ' + hero.a.hol.name + ' week: there is no pickup on the holiday, so everything runs one day late. ' +
         hero.type + ' comes ' + fmt(hero.a.day) + ' instead of ' + fmt(hero.d) + '.';
     }
 
@@ -525,7 +575,7 @@ button{font-family:inherit;cursor:pointer}
       $('upcTitle').textContent = 'Upcoming';
       list.innerHTML = upcomingPickups(T).map((u) => {
         const date = u.a.moved
-          ? fmt(u.a.day) + ' · moved from ' + WD[u.d.getDay()].slice(0, 3) + ' (' + u.a.hol + ')'
+          ? fmt(u.a.day) + ' · moved from ' + WD[u.d.getDay()].slice(0, 3) + ' (' + u.a.hol.name + ')'
           : fmt(u.d);
         return rowHtml(u.color, u.type, date, rel(u.a.day, T));
       }).join('');
@@ -541,7 +591,7 @@ button{font-family:inherit;cursor:pointer}
         if (!on || !isAct(d)) continue;
         const schedToday = type === 'Garbage' ? (isG(d) && !weekHoliday(d)) : (isR(d) && !weekHoliday(d));
         const from = prevOf(d);
-        const date = schedToday ? fmt(d) : fmt(d) + ' · moved from ' + WD[from.getDay()].slice(0, 3) + ' (' + weekHoliday(from) + ')';
+        const date = schedToday ? fmt(d) : fmt(d) + ' · moved from ' + WD[from.getDay()].slice(0, 3) + ' (' + weekHoliday(from).name + ')';
         rows += rowHtml(color, type, date, d >= T ? rel(d, T) : '');
       }
     }
@@ -566,8 +616,12 @@ button{font-family:inherit;cursor:pointer}
       if (showG() && isActualG(d)) cls.push('g'); else if (showR() && isActualR(d)) cls.push('r');
       if (n === state.selDay) cls.push('sel');
       if (d.getTime() === T.getTime()) cls.push('today');
-      const title = hol ? ' title="' + esc(hol) + ' — no pickup"' : '';
-      html += '<div class="' + cls.join(' ') + '"' + title + ' data-d="' + n + '"><div class="n">' + n + '</div><div class="u">' + (hol ? '<i></i>' : '') + '</div></div>';
+      const title = hol ? ' title="' + esc(hol.name) + (hol.service ? ' — no pickup' : ' — pickups run as usual') + '"' : '';
+      const pickupCell = cls.includes('g') || cls.includes('r');
+      // themed holiday: tint the date and mark it with the holiday's emoji
+      const numStyle = hol && !pickupCell ? ' style="color:' + hol.tint + '"' : '';
+      const mark = hol ? '<span class="hem" title="' + esc(hol.name) + '">' + hol.emoji + '</span>' : '';
+      html += '<div class="' + cls.join(' ') + '"' + title + ' data-d="' + n + '"><div class="n"' + numStyle + '>' + n + '</div><div class="u">' + mark + '</div></div>';
     }
     $('calGrid').innerHTML = html;
     $('legG').hidden = !showG();
@@ -594,13 +648,17 @@ button{font-family:inherit;cursor:pointer}
     if (showG() && isG(d) && weekHoliday(d)) away.push('garbage');
     if (showR() && isR(d) && weekHoliday(d)) away.push('recycling');
     const out = [];
-    if (hol) out.push(long + ' is ' + hol + ' — no pickups on city holidays, so the rest of that week runs one day late.');
+    if (hol) {
+      out.push(hol.emoji + ' ' + long + ' is ' + hol.name + (hol.service
+        ? ' — no pickups on city holidays, so the rest of that week runs one day late.'
+        : ' — a holiday, but trash and recycling run as usual.'));
+    }
     if (acts.length) {
       const ph = acts.map((t) => {
         const schedToday = t === 'Garbage' ? (isG(d) && !weekHoliday(d)) : (isR(d) && !weekHoliday(d));
         if (schedToday) return t.toLowerCase() + ' pickup';
         const from = prevOf(d);
-        return t.toLowerCase() + ' pickup, moved from ' + WD[from.getDay()] + ' (' + weekHoliday(from) + ' week)';
+        return t.toLowerCase() + ' pickup, moved from ' + WD[from.getDay()] + ' (' + weekHoliday(from).name + ' week)';
       });
       out.push((hol ? '' : long + ' — ') + ph.join(' and ') + '. Carts out by 6 AM.');
     } else if (away.length && hol) {
@@ -608,7 +666,7 @@ button{font-family:inherit;cursor:pointer}
       out.push(cap(away.join(' & ')) + ' moves to ' + fmtLong(to) + '.');
     } else if (away.length) {
       const to = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
-      out.push(long + ' — no ' + away.join(' or ') + ' this day: ' + weekHoliday(d) + ' week pushes it to ' + fmtLong(to) + '.');
+      out.push(long + ' — no ' + away.join(' or ') + ' this day: ' + weekHoliday(d).name + ' week pushes it to ' + fmtLong(to) + '.');
     } else if (!hol) {
       let nxt = null;
       for (let i = 1; i <= 21 && !nxt; i++) {

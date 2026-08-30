@@ -5,9 +5,43 @@ const chicago = (d) => { const p = new Intl.DateTimeFormat('en-US', { timeZone: 
 const DAY = 864e5;
 const ANCHOR = Date.UTC(2026, 7, 11); // recycling Tuesday (every other week)
 const scheduledTypes = (t) => { const dow = new Date(t).getUTCDay(); const out = []; if (dow === 4) out.push('Garbage'); if (dow === 2 && ((Math.round((t - ANCHOR) / DAY) % 14) + 14) % 14 === 0) out.push('Recycling'); return out; };
-// Chicago city holidays — keys use 0-based months, same table as the app
-const HOLS = { '2026-0-1': 1, '2026-0-19': 1, '2026-1-12': 1, '2026-2-2': 1, '2026-4-25': 1, '2026-5-19': 1, '2026-6-3': 1, '2026-8-7': 1, '2026-9-12': 1, '2026-10-11': 1, '2026-10-26': 1, '2026-11-25': 1, '2027-0-1': 1, '2027-0-18': 1, '2027-1-12': 1, '2027-2-1': 1, '2027-4-31': 1, '2027-5-18': 1, '2027-6-5': 1, '2027-8-6': 1 };
-const holOf = (t) => { const d = new Date(t); return HOLS[d.getUTCFullYear() + '-' + d.getUTCMonth() + '-' + d.getUTCDate()]; };
+// Service-affecting American holidays, computed by rule — same set and same
+// weekend-observance convention as the app's HOLIDAYS table (service:true only).
+const nthWeekday = (y, m, dow, nth) => {
+  if (nth < 0) { const last = new Date(Date.UTC(y, m + 1, 0)); return Date.UTC(y, m, last.getUTCDate() - ((last.getUTCDay() - dow + 7) % 7)); }
+  const first = new Date(Date.UTC(y, m, 1));
+  return Date.UTC(y, m, 1 + ((dow - first.getUTCDay() + 7) % 7) + (nth - 1) * 7);
+};
+const observed = (t) => { const w = new Date(t).getUTCDay(); return w === 6 ? t - 864e5 : w === 0 ? t + 864e5 : t; };
+const SERVICE_HOLIDAYS = [
+  (y) => observed(Date.UTC(y, 0, 1)),        // New Year's Day
+  (y) => nthWeekday(y, 0, 1, 3),             // MLK Day
+  (y) => Date.UTC(y, 1, 12),                 // Lincoln's Birthday (Chicago)
+  (y) => nthWeekday(y, 2, 1, 1),             // Pulaski Day (Chicago)
+  (y) => nthWeekday(y, 4, 1, -1),            // Memorial Day
+  (y) => observed(Date.UTC(y, 5, 19)),       // Juneteenth
+  (y) => observed(Date.UTC(y, 6, 4)),        // Independence Day
+  (y) => nthWeekday(y, 8, 1, 1),             // Labor Day
+  (y) => nthWeekday(y, 9, 1, 2),             // Columbus Day
+  (y) => observed(Date.UTC(y, 10, 11)),      // Veterans Day
+  (y) => nthWeekday(y, 10, 4, 4),            // Thanksgiving
+  (y) => observed(Date.UTC(y, 11, 25)),      // Christmas Day
+];
+const holCache = {};
+// observed dates can land in a neighbouring year (Jan 1 on a Saturday is
+// observed Dec 31 of the year before), so scan neighbours and keep only year y
+const holsFor = (y) => {
+  if (!holCache[y]) {
+    const s = new Set();
+    for (const yr of [y - 1, y, y + 1]) for (const f of SERVICE_HOLIDAYS) {
+      const t = f(yr);
+      if (new Date(t).getUTCFullYear() === y) s.add(t);
+    }
+    holCache[y] = s;
+  }
+  return holCache[y];
+};
+const holOf = (t) => holsFor(new Date(t).getUTCFullYear()).has(t) || undefined;
 // holiday earlier in the same Mon-Sun week, on or before the scheduled day → that pickup slides one day later
 const weekHol = (t) => { const dow = new Date(t).getUTCDay(); for (let i = 0; i <= (dow + 6) % 7; i++) { if (holOf(t - i * DAY)) return true; } return false; };
 const actualTypes = (t) => {
