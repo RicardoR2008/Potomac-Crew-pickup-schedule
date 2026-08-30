@@ -363,8 +363,10 @@ button{font-family:inherit;cursor:pointer}
 
   const upcomingPickups = (T) => {
     const ups = [];
-    for (let i = 0; i < 120 && ups.length < 6; i++) {
-      const d = new Date(T.getTime() + i * DAY);
+    // starts at -1: yesterday's scheduled pickup may have slid onto today.
+    // calendar-field stepping, not ms addition — ms days break after the DST fall-back.
+    for (let i = -1; i < 120 && ups.length < 6; i++) {
+      const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
       if (showG() && isG(d)) ups.push({ d, a: actualOf(d), type: 'Garbage', color: 'var(--ink)' });
       if (showR() && isR(d)) ups.push({ d, a: actualOf(d), type: 'Recycling', color: ACCENT });
     }
@@ -379,7 +381,7 @@ button{font-family:inherit;cursor:pointer}
     const T = todayMidnight();
     const evening = state.notifyTime !== 'morning';
     const [ch, cm] = notifyClock().split(':').map(Number);
-    for (let i = 0; i < 20; i++) {
+    for (let i = -1; i < 20; i++) {
       const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
       const g = showG() && d.getDay() === gDow;
       const r = showR() && isR(d);
