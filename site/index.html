@@ -113,7 +113,8 @@ button{font-family:inherit;cursor:pointer}
 
 /* settings */
 .scrim{position:absolute;inset:0;background:rgba(0,0,0,0.35);z-index:20}
-.sheet{position:absolute;top:120px;right:20px;width:280px;background:var(--bg);border-radius:18px;padding:18px 20px 22px;box-shadow:0 12px 40px rgba(0,0,0,0.25)}
+.sheet{position:absolute;top:120px;right:20px;width:280px;background:var(--bg);border-radius:18px;padding:18px 20px 22px;box-shadow:0 12px 40px rgba(0,0,0,0.25);max-height:calc(100% - 150px);overflow-y:auto;scrollbar-width:none}
+.sheet::-webkit-scrollbar{display:none}
 .sheet-head{display:flex;align-items:center;justify-content:space-between}
 .sheet-title{font-size:17px;font-weight:600;color:var(--ink)}
 .done-btn{border:none;background:none;color:var(--ink);font-size:15px;font-weight:600;padding:4px 0}
@@ -128,7 +129,9 @@ button{font-family:inherit;cursor:pointer}
 .toggle{width:46px;height:28px;border-radius:14px;border:none;padding:2px;background:var(--chip);display:flex;justify-content:flex-start;align-items:center;transition:background .2s;flex:none}
 .toggle.on{background:#3EC163;justify-content:flex-end}
 .toggle i{width:24px;height:24px;border-radius:12px;background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.25);display:block}
-.seg.notify-time{margin-top:12px}
+.seg.notify-time{margin-top:8px}
+.sub-label{font-size:14px;color:var(--ink);margin-top:16px}
+.notif-note{margin-top:12px;background:var(--chip);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;color:var(--note)}
 .time-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
 .time-row input{border:none;background:var(--chip);color:var(--ink);border-radius:8px;padding:6px 10px;font-family:inherit;font-size:13px;color-scheme:var(--scheme)}
 
@@ -224,9 +227,10 @@ button{font-family:inherit;cursor:pointer}
           <div class="notif-label">Pickup reminders</div>
           <button class="toggle" id="notifToggle" aria-label="Pickup reminders"><i></i></button>
         </div>
+        <div class="sub-label" id="modeLabel" hidden>Remind me</div>
         <div class="seg small notify-time" id="timeSeg" hidden>
-          <button data-val="evening">Night before</button>
-          <button data-val="morning">Morning of</button>
+          <button data-val="evening">The evening before</button>
+          <button data-val="morning">The morning of</button>
         </div>
         <div class="time-row" id="clockRow" hidden>
           <div class="notif-label">Remind at</div>
@@ -326,6 +330,7 @@ button{font-family:inherit;cursor:pointer}
 
   const todayMidnight = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
   const fmt = (d) => WD[d.getDay()].slice(0, 3) + ', ' + MO[d.getMonth()].slice(0, 3) + ' ' + d.getDate();
+  const fmtLong = (d) => WD[d.getDay()] + ', ' + MO[d.getMonth()] + ' ' + d.getDate();
   const rel = (d, T) => {
     const n = Math.round((d - T) / DAY);
     return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n < 7 ? WD[d.getDay()] : 'in ' + n + ' days';
@@ -522,19 +527,28 @@ button{font-family:inherit;cursor:pointer}
     for (const b of $('scaleSeg').children) b.classList.toggle('on', parseFloat(b.dataset.val) === state.scale);
     const notifyOn = state.notify && state.notifPerm === 'granted';
     $('notifToggle').classList.toggle('on', notifyOn);
+    $('modeLabel').hidden = !notifyOn;
     $('timeSeg').hidden = !notifyOn;
     $('clockRow').hidden = !notifyOn;
     for (const b of $('timeSeg').children) b.classList.toggle('on', b.dataset.val === state.notifyTime);
     $('clockInput').value = notifyClock();
     let status = 'Get a heads-up before each pickup.';
+    let asNote = false;
     if (state.notifPerm === 'unsupported') status = 'Notifications aren’t available in this browser view.';
     else if (state.notifPerm === 'denied') status = 'Notifications are blocked — allow them in browser settings.';
     else if (notifyOn) {
       const nx = reminderTarget();
-      if (nx) status = 'Next reminder: ' + fmt(nx.target) + ', ' + fmtTime(nx.target) + ' CT.' +
-        (state.pushActive ? ' Delivered even when this page is closed.' : '');
+      if (nx) {
+        const evening = state.notifyTime !== 'morning';
+        status = 'Next reminder: ' + fmtLong(nx.target) + ' at ' + fmtTime(nx.target) + ' (Chicago time) — the ' +
+          (evening ? 'evening before' : 'morning of') + ' ' + WD[nx.day.getDay()] + '’s ' +
+          nx.type.toLowerCase() + ' pickup.' +
+          (state.pushActive ? ' Works even when this page is closed.' : '');
+        asNote = true;
+      }
     }
     $('notifStatus').textContent = status;
+    $('notifStatus').className = asNote ? 'notif-note' : 'hint';
   };
 
   const renderAll = () => { renderHero(); renderCalendar(); renderSettings(); };
