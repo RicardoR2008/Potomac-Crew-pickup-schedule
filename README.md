@@ -40,10 +40,19 @@ Real push — fires even with the page closed.
 3. Redeploy. Then open the site, Settings (gear) -> Pickup reminders ON, allow notifications.
 
 How it works: `site/sw.js` receives pushes; `subscribe.mjs` stores each browser's
-subscription in Netlify Blobs; `send-reminders.mjs` runs on a schedule (7:00 PM and
-5:30 AM Chicago time), checks if tomorrow/today is a pickup, and sends via web-push.
+subscription (night-before or morning-of, plus a chosen reminder time) in Netlify Blobs;
+`send-reminders.mjs` runs every 15 minutes and fires each subscription in the quarter-hour
+bucket holding its time — compared in America/Chicago wall clock, so CST/CDT are automatic.
+Defaults: 7:00 PM night before, 5:30 AM morning of; times snap to 15-minute steps.
 Dead subscriptions are pruned automatically. iPhone: requires Add to Home Screen (iOS 16.4+).
 Without the env vars the app quietly falls back to in-tab reminders.
+
+## Holiday weeks
+City rule: no pickup on a Chicago holiday, and that day plus the rest of the week runs one
+day late. The app applies the slide everywhere — hero, countdown, upcoming list, reminders,
+and the calendar (holiday dates show dimmed with a dot; the green/blue marks sit on the
+actual pickup days). The holiday table is hardcoded through Labor Day 2027 and needs
+extending after that.
 
 ## How live pulling works
 The browser can't read recyclebycity.com directly (cross-origin), so the function

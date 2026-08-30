@@ -15,16 +15,16 @@
 <style>
 :root{
   --page:#f2f2f0;--bg:#ffffff;--ink:#1d1d1f;--sub:#86868b;--faint:#b0aeab;
-  --chip:#f5f5f3;--line:#f0efed;--note:#514f4d;
+  --chip:#f5f5f3;--line:#f0efed;--note:#514f4d;--scheme:light;
 }
 :root[data-theme="dark"]{
   --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#6e6e73;
-  --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;
+  --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;--scheme:dark;
 }
 @media (prefers-color-scheme:dark){
   :root[data-theme="system"]{
     --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#6e6e73;
-    --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;
+    --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;--scheme:dark;
   }
 }
 :root[data-scale="0.9"] [data-scale-region]{zoom:0.9}
@@ -88,6 +88,8 @@ button{font-family:inherit;cursor:pointer}
 .cell{height:42px;display:flex;flex-direction:column;align-items:center;gap:3px}
 .cell .n{width:34px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:400;color:var(--ink)}
 .cell.blank .n{width:auto;height:auto}
+.cell.hol .n{color:var(--faint)}
+.cell.hol .u i{width:5px;height:5px;border-radius:50%;background:var(--faint);display:block}
 .cell.g .n{background:#3EC163;color:#14161a;font-weight:600}
 .cell.r .n{background:#5FC9EE;color:#14161a;font-weight:600}
 .cell.today .n{box-shadow:inset 0 0 0 2px var(--ink);font-weight:600}
@@ -127,6 +129,8 @@ button{font-family:inherit;cursor:pointer}
 .toggle.on{background:#3EC163;justify-content:flex-end}
 .toggle i{width:24px;height:24px;border-radius:12px;background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.25);display:block}
 .seg.notify-time{margin-top:12px}
+.time-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+.time-row input{border:none;background:var(--chip);color:var(--ink);border-radius:8px;padding:6px 10px;font-family:inherit;font-size:13px;color-scheme:var(--scheme)}
 
 /* real phones: the app is the screen */
 @media (max-width:560px){
@@ -221,8 +225,12 @@ button{font-family:inherit;cursor:pointer}
           <button class="toggle" id="notifToggle" aria-label="Pickup reminders"><i></i></button>
         </div>
         <div class="seg small notify-time" id="timeSeg" hidden>
-          <button data-val="evening">Night before, 7&#8202;PM</button>
-          <button data-val="morning">Morning, 5:30&#8202;AM</button>
+          <button data-val="evening">Night before</button>
+          <button data-val="morning">Morning of</button>
+        </div>
+        <div class="time-row" id="clockRow" hidden>
+          <div class="notif-label">Remind at</div>
+          <input type="time" id="clockInput" step="900" aria-label="Reminder time">
         </div>
         <div class="hint" id="notifStatus"></div>
       </div>
@@ -264,6 +272,8 @@ button{font-family:inherit;cursor:pointer}
     scale: parseFloat(LS.get('gc-scale')) || 1,
     notify: LS.get('gc-notify') === '1',
     notifyTime: LS.get('gc-notify-time') || 'evening',
+    clockEvening: LS.get('gc-clock-evening') || '19:00',
+    clockMorning: LS.get('gc-clock-morning') || '05:30',
     notifPerm: typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
     pushActive: false,
   };
@@ -303,6 +313,16 @@ button{font-family:inherit;cursor:pointer}
     }
     return null;
   };
+  const prevOf = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+  // city rule: no pickup on the holiday; that day and the rest of the week slide one day later
+  const actualOf = (d) => {
+    const h = weekHoliday(d);
+    return h
+      ? { day: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), hol: h, moved: true }
+      : { day: d, hol: null, moved: false };
+  };
+  const isActualG = (d) => (isG(d) && !weekHoliday(d)) || (isG(prevOf(d)) && !!weekHoliday(prevOf(d)));
+  const isActualR = (d) => (isR(d) && !weekHoliday(d)) || (isR(prevOf(d)) && !!weekHoliday(prevOf(d)));
 
   const todayMidnight = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
   const fmt = (d) => WD[d.getDay()].slice(0, 3) + ', ' + MO[d.getMonth()].slice(0, 3) + ' ' + d.getDate();
@@ -317,15 +337,24 @@ button{font-family:inherit;cursor:pointer}
   };
   const p2 = (x) => String(x).padStart(2, '0');
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const notifyClock = () => (state.notifyTime === 'morning' ? state.clockMorning : state.clockEvening);
+  // reminders ride a 15-minute server schedule, so times snap to :00/:15/:30/:45
+  const snap15 = (v) => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(v || '');
+    if (!m) return null;
+    const t = (((+m[1]) * 60 + Math.round((+m[2]) / 15) * 15) % 1440 + 1440) % 1440;
+    return p2(Math.floor(t / 60)) + ':' + p2(t % 60);
+  };
 
   const upcomingPickups = (T) => {
     const ups = [];
     for (let i = 0; i < 70 && ups.length < 6; i++) {
       const d = new Date(T.getTime() + i * DAY);
-      if (isG(d)) ups.push({ d, type: 'Garbage', color: 'var(--ink)' });
-      if (isR(d)) ups.push({ d, type: 'Recycling', color: ACCENT });
+      if (isG(d)) ups.push({ d, a: actualOf(d), type: 'Garbage', color: 'var(--ink)' });
+      if (isR(d)) ups.push({ d, a: actualOf(d), type: 'Recycling', color: ACCENT });
     }
-    return ups;
+    // a shifted pickup may already be done relative to today (e.g. viewing on the in-between day)
+    return ups.filter((u) => u.a.day >= T);
   };
 
   // next pickup worth reminding about (16-day scan), with its fire time
@@ -334,16 +363,18 @@ button{font-family:inherit;cursor:pointer}
     const now = new Date();
     const T = todayMidnight();
     const evening = state.notifyTime !== 'morning';
+    const [ch, cm] = notifyClock().split(':').map(Number);
     for (let i = 0; i < 16; i++) {
       const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
       const g = d.getDay() === gDow;
       const r = isR(d);
       if (!g && !r) continue;
       const type = g && r ? 'Garbage & recycling' : g ? 'Garbage' : 'Recycling';
+      const a = actualOf(d);
       const t = evening
-        ? new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 19, 0, 0)
-        : new Date(d.getFullYear(), d.getMonth(), d.getDate(), 5, 30, 0);
-      if (t > now) return { target: t, type, day: d };
+        ? new Date(a.day.getFullYear(), a.day.getMonth(), a.day.getDate() - 1, ch, cm, 0)
+        : new Date(a.day.getFullYear(), a.day.getMonth(), a.day.getDate(), ch, cm, 0);
+      if (t > now) return { target: t, type, day: a.day };
     }
     return null;
   };
@@ -371,7 +402,7 @@ button{font-family:inherit;cursor:pointer}
       const r = await fetch('/.netlify/functions/subscribe', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ subscription: sub.toJSON(), time: state.notifyTime }),
+        body: JSON.stringify({ subscription: sub.toJSON(), time: state.notifyTime, clock: notifyClock() }),
       });
       if (r.ok) { state.pushActive = true; clearTimeout(notifTimer); renderSettings(); }
     } catch (e) {}
@@ -402,7 +433,7 @@ button{font-family:inherit;cursor:pointer}
     const ms = Math.min(nx.target - new Date(), 20 * DAY);
     notifTimer = setTimeout(() => {
       try {
-        new Notification(nx.type + ' pickup ' + (state.notifyTime === 'morning' ? 'this morning' : 'tomorrow'),
+        new Notification(nx.type + ' pickup ' + (state.notifyTime === 'morning' ? 'today' : 'tomorrow'),
           { body: 'Carts out by 6 AM — ' + ADDRESS });
       } catch (e) {}
       setTimeout(scheduleNotif, 60000);
@@ -437,23 +468,26 @@ button{font-family:inherit;cursor:pointer}
     const ups = upcomingPickups(T);
     const hero = ups[0], then = ups[1];
     if (!hero) return;
-    $('heroWhen').textContent = rel(hero.d, T);
+    $('heroWhen').textContent = rel(hero.a.day, T);
     $('heroDot').style.background = hero.color;
     $('heroType').textContent = hero.type + ' pickup';
-    $('heroSub').textContent = fmt(hero.d) + ' · carts out by 6 AM';
-    $('thenLine').textContent = then ? 'Then ' + then.type.toLowerCase() + ' on ' + fmt(then.d) : '';
-    const hol = weekHoliday(hero.d);
-    $('holidayNote').hidden = !hol;
-    if (hol) $('holidayNote').textContent = hol + ' falls this week — this pickup may run a day late.';
+    $('heroSub').textContent = fmt(hero.a.day) + ' · carts out by 6 AM';
+    $('thenLine').textContent = then ? 'Then ' + then.type.toLowerCase() + ' on ' + fmt(then.a.day) : '';
+    $('holidayNote').hidden = !hero.a.moved;
+    if (hero.a.moved) {
+      $('holidayNote').textContent = hero.a.hol + ' week: there is no pickup on the holiday, so everything runs one day late. ' +
+        hero.type + ' comes ' + fmt(hero.a.day) + ' instead of ' + fmt(hero.d) + '.';
+    }
 
     const list = $('upcList');
     list.innerHTML = ups.map((u) => {
-      const h = weekHoliday(u.d);
-      const date = fmt(u.d) + (h ? ' · may run late (' + h + ')' : '');
+      const date = u.a.moved
+        ? fmt(u.a.day) + ' · moved from ' + WD[u.d.getDay()].slice(0, 3) + ' (' + u.a.hol + ')'
+        : fmt(u.d);
       return '<div class="upc-row">' +
         '<span class="dot" style="background:' + u.color + '"></span>' +
         '<div class="mid"><div class="t">' + esc(u.type) + '</div><div class="d">' + esc(date) + '</div></div>' +
-        '<div class="w">' + esc(rel(u.d, T)) + '</div></div>';
+        '<div class="w">' + esc(rel(u.a.day, T)) + '</div></div>';
     }).join('');
 
     $('sourceNote').textContent = state.live ? 'Live from Recycle by City.' : '';
@@ -472,9 +506,12 @@ button{font-family:inherit;cursor:pointer}
     for (let n = 1; n <= dim; n++) {
       const d = new Date(vm.getFullYear(), vm.getMonth(), n);
       const cls = ['cell'];
-      if (isG(d)) cls.push('g'); else if (isR(d)) cls.push('r');
+      const hol = holOf(d);
+      if (hol) cls.push('hol');
+      if (isActualG(d)) cls.push('g'); else if (isActualR(d)) cls.push('r');
       if (d.getTime() === T.getTime()) cls.push('today');
-      html += '<div class="' + cls.join(' ') + '"><div class="n">' + n + '</div><div class="u"></div></div>';
+      const title = hol ? ' title="' + esc(hol) + ' — no pickup"' : '';
+      html += '<div class="' + cls.join(' ') + '"' + title + '><div class="n">' + n + '</div><div class="u">' + (hol ? '<i></i>' : '') + '</div></div>';
     }
     $('calGrid').innerHTML = html;
   };
@@ -486,13 +523,15 @@ button{font-family:inherit;cursor:pointer}
     const notifyOn = state.notify && state.notifPerm === 'granted';
     $('notifToggle').classList.toggle('on', notifyOn);
     $('timeSeg').hidden = !notifyOn;
+    $('clockRow').hidden = !notifyOn;
     for (const b of $('timeSeg').children) b.classList.toggle('on', b.dataset.val === state.notifyTime);
+    $('clockInput').value = notifyClock();
     let status = 'Get a heads-up before each pickup.';
     if (state.notifPerm === 'unsupported') status = 'Notifications aren’t available in this browser view.';
     else if (state.notifPerm === 'denied') status = 'Notifications are blocked — allow them in browser settings.';
     else if (notifyOn) {
       const nx = reminderTarget();
-      if (nx) status = 'Next reminder: ' + fmt(nx.target) + ', ' + fmtTime(nx.target) + '.' +
+      if (nx) status = 'Next reminder: ' + fmt(nx.target) + ', ' + fmtTime(nx.target) + ' CT.' +
         (state.pushActive ? ' Delivered even when this page is closed.' : '');
     }
     $('notifStatus').textContent = status;
@@ -513,9 +552,9 @@ button{font-family:inherit;cursor:pointer}
     // countdown to the next garbage carts-out deadline (6:00 AM)
     const T = todayMidnight();
     let target = null, targetDate = null;
-    for (let i = 0; i < 9 && !target; i++) {
+    for (let i = 0; i < 10 && !target; i++) {
       const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
-      if (isG(d)) {
+      if (isActualG(d)) {
         const t6 = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 6, 0, 0);
         if (t6 > now) { target = t6; targetDate = d; }
       }
@@ -554,6 +593,15 @@ button{font-family:inherit;cursor:pointer}
     renderSettings();
   });
   $('notifToggle').addEventListener('click', toggleNotify);
+  $('clockInput').addEventListener('change', (e) => {
+    const v = snap15(e.target.value);
+    if (!v) { renderSettings(); return; }
+    if (state.notifyTime === 'morning') { state.clockMorning = v; LS.set('gc-clock-morning', v); }
+    else { state.clockEvening = v; LS.set('gc-clock-evening', v); }
+    scheduleNotif();
+    if (state.pushActive) pushSubscribe();
+    renderSettings();
+  });
 
   // ── boot ───────────────────────────────────────────────────────
   applyTheme();

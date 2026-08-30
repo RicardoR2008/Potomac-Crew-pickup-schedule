@@ -5,9 +5,13 @@ export default async (req) => {
   const store = getStore('push-subs');
   if (req.method === 'GET') return Response.json({ publicKey: process.env.VAPID_PUBLIC_KEY || null });
   if (req.method === 'POST') {
-    const { subscription, time } = await req.json();
+    const { subscription, time, clock } = await req.json();
     if (!subscription || !subscription.endpoint) return new Response('bad request', { status: 400 });
-    await store.setJSON(keyOf(subscription.endpoint), { subscription, time: time === 'morning' ? 'morning' : 'evening' });
+    await store.setJSON(keyOf(subscription.endpoint), {
+      subscription,
+      time: time === 'morning' ? 'morning' : 'evening',
+      clock: /^([01]\d|2[0-3]):[0-5]\d$/.test(clock || '') ? clock : undefined,
+    });
     return Response.json({ ok: true });
   }
   if (req.method === 'DELETE') {
