@@ -362,7 +362,7 @@ button{font-family:inherit;cursor:pointer}
   const state = {
     monthOffset: 0,
     selDay: null,
-    live: null,
+    sched: null,
     theme: LS.get('gc-theme') || null,
     scale: parseFloat(LS.get('gc-scale')) || 1,
     notify: LS.get('gc-notify') === '1',
@@ -376,50 +376,100 @@ button{font-family:inherit;cursor:pointer}
   let notifTimer = null;
   let lastDayKey = '';
 
-  // ── schedule rules ─────────────────────────────────────────────
-  // Built-in: garbage every Thursday, recycling every other Tuesday
-  // (anchored Aug 11, 2026). The Netlify function may override from
-  // Recycle by City; a live anchor only counts if it lands on rDow.
-  const rules = () => {
-    const live = state.live;
-    const gDow = live && live.garbageDow != null ? live.garbageDow : 4;
-    const rDow = live && live.recyclingDow != null ? live.recyclingDow : 2;
-    let anchor = new Date(2026, 7, 11);
-    if (live && live.recyclingAnchor) {
-      const a = live.recyclingAnchor.split('-').map(Number);
-      const c = new Date(a[0], a[1] - 1, a[2]);
-      if (c.getDay() === rDow) anchor = c;
+  // ── the published schedule ───────────────────────────────────
+  // Collection dates come from the city's published schedule (the Recycle by
+  // City feed), never from guessing a holiday rule. That distinction matters:
+  // a Monday holiday does NOT push Thursday garbage, while a holiday landing on
+  // the collection day moves it EARLIER. No single rule captures both, and the
+  // rule this app used before was wrong on 41 of 159 published collections.
+  //
+  // state.sched is { collections:[{d:'YYYY-MM-DD',t:'Garbage'|'Recycling'}], coverage, origin }
+  const isoOf = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  let schedIndex = null, schedIndexFor = null;
+  const index = () => {
+    const sched = state.sched;
+    if (!sched) return null;
+    if (schedIndexFor !== sched) { // rebuild only when the data itself changes
+      schedIndex = new Set(sched.collections.map((c) => c.d + '|' + c.t));
+      schedIndexFor = sched;
     }
-    return { gDow, rDow, anchor };
+    return schedIndex;
   };
-  const isG = (d) => d.getDay() === rules().gDow;
-  const isR = (d) => {
-    const { rDow, anchor } = rules();
-    if (d.getDay() !== rDow) return false;
-    const diff = Math.round((d - anchor) / DAY);
+  const covers = (d) => {
+    const s2 = state.sched;
+    if (!s2 || !s2.coverage) return false;
+    const iso = isoOf(d);
+    return iso >= s2.coverage.from && iso <= s2.coverage.to;
+  };
+  // Base pattern, used only for dates the published schedule does not reach.
+  // No holiday adjustment is applied there - guessing is what caused the bug.
+  const RECYCLING_ANCHOR = new Date(2026, 7, 11); // a published recycling Tuesday
+  const baseG = (d) => d.getDay() === 4;
+  const baseR = (d) => {
+    if (d.getDay() !== 2) return false;
+    const diff = Math.round((d - RECYCLING_ANCHOR) / DAY);
     return ((diff % 14) + 14) % 14 === 0;
   };
+  const isActualG = (d) => { const i = index(); return i && covers(d) ? i.has(isoOf(d) + '|Garbage') : baseG(d); };
+  const isActualR = (d) => { const i = index(); return i && covers(d) ? i.has(isoOf(d) + '|Recycling') : baseR(d); };
+  const isEstimated = (d) => !covers(d); // beyond the published schedule
   const holOf = (d) => holidaysFor(d.getFullYear())[d.getMonth() + '-' + d.getDate()] || null;
-  const serviceHolOf = (d) => { const h = holOf(d); return h && h.service ? h : null; };
-  // service holiday earlier in the same Mon-Sun week, on or before pickup day
-  const weekHoliday = (d) => {
-    for (let i = 0; i <= (d.getDay() + 6) % 7; i++) {
-      const p = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i);
-      const h = serviceHolOf(p);
+  // Holidays are shown and themed, but they no longer decide collection dates.
+  const prevOf = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+  // A collection is 'moved' when it is not on its usual weekday. The published
+  // schedule says where it went; we only work out where it came from, by finding
+  // the usual day in the same Mon-Sun week that has no collection of its own.
+  const usualDayFor = (d, type) => {
+    const isBase = type === 'Garbage' ? baseG : baseR;
+    const isActual = type === 'Garbage' ? isActualG : isActualR;
+    if (isBase(d)) return null; // already on its usual day
+    const monOffset = (d.getDay() + 6) % 7;
+    for (let i = -monOffset; i <= 6 - monOffset; i++) {
+      const c = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+      if (isBase(c) && !isActual(c)) return c; // its usual slot, vacated
+    }
+    return null;
+  };
+  // Where a vacated usual slot went: the collection of that type in the same
+  // Mon-Sun week that is not on its usual day.
+  const movedTargetFor = (d, type) => {
+    const isBase = type === 'Garbage' ? baseG : baseR;
+    const isActual = type === 'Garbage' ? isActualG : isActualR;
+    const monOffset = (d.getDay() + 6) % 7;
+    for (let i = -monOffset; i <= 6 - monOffset; i++) {
+      const c = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+      if (isActual(c) && !isBase(c)) return c;
+    }
+    return null;
+  };
+  // A holiday anywhere in the same Mon-Sun week, for labelling only.
+  const weekHolidayOf = (d) => {
+    const monOffset = (d.getDay() + 6) % 7;
+    for (let i = -monOffset; i <= 6 - monOffset; i++) {
+      const c = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+      const h = holOf(c);
       if (h) return h;
     }
     return null;
   };
-  const prevOf = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
-  // city rule: no pickup on the holiday; that day and the rest of the week slide one day later
-  const actualOf = (d) => {
-    const h = weekHoliday(d);
-    return h
-      ? { day: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), hol: h, moved: true }
-      : { day: d, hol: null, moved: false };
+  // Every collection in the same Mon-Sun week, straight from the schedule.
+  const weekCollections = (d) => {
+    const monOffset = (d.getDay() + 6) % 7;
+    const out = [];
+    for (let i = -monOffset; i <= 6 - monOffset; i++) {
+      const c = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+      if (showG() && isActualG(c)) out.push({ day: c, type: 'Garbage', movedFrom: usualDayFor(c, 'Garbage') });
+      if (showR() && isActualR(c)) out.push({ day: c, type: 'Recycling', movedFrom: usualDayFor(c, 'Recycling') });
+    }
+    return out;
   };
-  const isActualG = (d) => (isG(d) && !weekHoliday(d)) || (isG(prevOf(d)) && !!weekHoliday(prevOf(d)));
-  const isActualR = (d) => (isR(d) && !weekHoliday(d)) || (isR(prevOf(d)) && !!weekHoliday(prevOf(d)));
+  const scheduleSourceNote = () => {
+    const s2 = state.sched;
+    if (!s2) return '';
+    if (s2.origin === 'live') return 'Collection days come straight from the city schedule published by Recycle by City.';
+    if (s2.origin === 'cache') return 'Collection days from the city schedule (last checked ' + (s2.checked || 'recently') + ').';
+    return 'Collection days from the city schedule saved with this app.';
+  };
   const showG = () => state.focus !== 'recycling';
   const showR = () => state.focus !== 'garbage';
 
@@ -464,35 +514,31 @@ button{font-family:inherit;cursor:pointer}
 
   const upcomingPickups = (T) => {
     const ups = [];
-    // starts at -1: yesterday's scheduled pickup may have slid onto today.
-    // calendar-field stepping, not ms addition — ms days break after the DST fall-back.
-    for (let i = -1; i < 120 && ups.length < 6; i++) {
+    // calendar-field stepping, not ms addition — ms days break after the DST fall-back
+    for (let i = 0; i < 180 && ups.length < 6; i++) {
       const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
-      if (showG() && isG(d)) ups.push({ d, a: actualOf(d), type: 'Garbage', color: 'var(--ink)' });
-      if (showR() && isR(d)) ups.push({ d, a: actualOf(d), type: 'Recycling', color: ACCENT });
+      if (showG() && isActualG(d)) ups.push({ day: d, type: 'Garbage', color: 'var(--ink)', movedFrom: usualDayFor(d, 'Garbage') });
+      if (showR() && isActualR(d)) ups.push({ day: d, type: 'Recycling', color: ACCENT, movedFrom: usualDayFor(d, 'Recycling') });
     }
-    // a shifted pickup may already be done relative to today (e.g. viewing on the in-between day)
-    return ups.filter((u) => u.a.day >= T);
+    return ups;
   };
 
   // next pickup worth reminding about (16-day scan), with its fire time
   const reminderTarget = () => {
-    const { gDow } = rules();
     const now = new Date();
     const T = todayMidnight();
     const evening = state.notifyTime !== 'morning';
     const [ch, cm] = notifyClock().split(':').map(Number);
-    for (let i = -1; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
       const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
-      const g = showG() && d.getDay() === gDow;
-      const r = showR() && isR(d);
+      const g = showG() && isActualG(d);
+      const r = showR() && isActualR(d);
       if (!g && !r) continue;
       const type = g && r ? 'Garbage & recycling' : g ? 'Garbage' : 'Recycling';
-      const a = actualOf(d);
       const t = evening
-        ? new Date(a.day.getFullYear(), a.day.getMonth(), a.day.getDate() - 1, ch, cm, 0)
-        : new Date(a.day.getFullYear(), a.day.getMonth(), a.day.getDate(), ch, cm, 0);
-      if (t > now) return { target: t, type, day: a.day };
+        ? new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, ch, cm, 0)
+        : new Date(d.getFullYear(), d.getMonth(), d.getDate(), ch, cm, 0);
+      if (t > now) return { target: t, type, day: d };
     }
     return null;
   };
@@ -586,18 +632,23 @@ button{font-family:inherit;cursor:pointer}
     const ups = upcomingPickups(T);
     const hero = ups[0], then = ups[1];
     if (!hero) return;
-    $('heroWhen').textContent = rel(hero.a.day, T);
+    $('heroWhen').textContent = rel(hero.day, T);
     $('heroDot').style.background = hero.color;
     $('heroType').textContent = hero.type + ' pickup';
-    $('heroSub').textContent = fmt(hero.a.day) + ' · carts out by 6 AM';
-    $('thenLine').textContent = then ? 'Then ' + then.type.toLowerCase() + ' on ' + fmt(then.a.day) : '';
-    $('holidayNote').hidden = !hero.a.moved;
-    if (hero.a.moved) {
-      $('holidayNote').textContent = hero.a.hol.emoji + ' ' + hero.a.hol.name + ' week: there is no pickup on the holiday, so everything runs one day late. ' +
-        hero.type + ' comes ' + fmt(hero.a.day) + ' instead of ' + fmt(hero.d) + '.';
+    $('heroSub').textContent = fmt(hero.day) + ' · carts out by 6 AM';
+    $('thenLine').textContent = then ? 'Then ' + then.type.toLowerCase() + ' on ' + fmt(then.day) : '';
+    const heroHol = weekHolidayOf(hero.day);
+    $('holidayNote').hidden = !(hero.movedFrom || heroHol);
+    if (hero.movedFrom) {
+      $('holidayNote').textContent = (heroHol ? heroHol.emoji + ' ' + heroHol.name + ': ' : '') +
+        'this ' + hero.type.toLowerCase() + ' pickup was moved. The city collects it ' + fmtLong(hero.day) +
+        ' instead of the usual ' + WD[hero.movedFrom.getDay()] + '.';
+    } else if (heroHol) {
+      $('holidayNote').textContent = heroHol.emoji + ' ' + heroHol.name + ' falls this week, and the city still collects ' +
+        hero.type.toLowerCase() + ' on its usual day, ' + fmtLong(hero.day) + '.';
     }
 
-    $('sourceNote').textContent = state.live ? 'Live from Recycle by City.' : '';
+    $('sourceNote').textContent = scheduleSourceNote();
   };
 
   const rowHtml = (color, type, date, when) =>
@@ -614,10 +665,10 @@ button{font-family:inherit;cursor:pointer}
     if (state.monthOffset === 0) {
       $('upcTitle').textContent = 'Upcoming';
       list.innerHTML = upcomingPickups(T).map((u) => {
-        const date = u.a.moved
-          ? fmt(u.a.day) + ' · moved from ' + WD[u.d.getDay()].slice(0, 3) + ' (' + u.a.hol.name + ')'
-          : fmt(u.d);
-        return rowHtml(u.color, u.type, date, rel(u.a.day, T));
+        const date = u.movedFrom
+          ? fmt(u.day) + ' · moved from ' + WD[u.movedFrom.getDay()].slice(0, 3)
+          : fmt(u.day);
+        return rowHtml(u.color, u.type, date, rel(u.day, T));
       }).join('');
       return;
     }
@@ -629,9 +680,8 @@ button{font-family:inherit;cursor:pointer}
       const d = new Date(vm.getFullYear(), vm.getMonth(), n);
       for (const [on, isAct, type, color] of [[showG(), isActualG, 'Garbage', 'var(--ink)'], [showR(), isActualR, 'Recycling', ACCENT]]) {
         if (!on || !isAct(d)) continue;
-        const schedToday = type === 'Garbage' ? (isG(d) && !weekHoliday(d)) : (isR(d) && !weekHoliday(d));
-        const from = prevOf(d);
-        const date = schedToday ? fmt(d) : fmt(d) + ' · moved from ' + WD[from.getDay()].slice(0, 3) + ' (' + weekHoliday(from).name + ')';
+        const moved = usualDayFor(d, type);
+        const date = moved ? fmt(d) + ' · moved from ' + WD[moved.getDay()].slice(0, 3) : fmt(d);
         rows += rowHtml(color, type, date, d >= T ? rel(d, T) : '');
       }
     }
@@ -687,28 +737,39 @@ button{font-family:inherit;cursor:pointer}
     if (showG() && isActualG(d)) acts.push('Garbage');
     if (showR() && isActualR(d)) acts.push('Recycling');
     const away = [];
-    if (showG() && isG(d) && weekHoliday(d)) away.push('garbage');
-    if (showR() && isR(d) && weekHoliday(d)) away.push('recycling');
+    if (showG() && baseG(d) && !isActualG(d) && movedTargetFor(d, 'Garbage')) away.push('garbage');
+    if (showR() && baseR(d) && !isActualR(d) && movedTargetFor(d, 'Recycling')) away.push('recycling');
     const out = [];
     if (hol) {
-      out.push(hol.emoji + ' ' + long + ' is ' + hol.name + (hol.service
-        ? ' — no pickups on city holidays, so the rest of that week runs one day late.'
-        : ' — a holiday, but trash and recycling run as usual.'));
+      // Report what the published schedule does that week rather than asserting a
+      // rule: a Monday holiday does not push Thursday's garbage, and saying it does
+      // is what made this app untrustworthy before.
+      const wk = weekCollections(d);
+      const moves = wk.filter((c) => c.movedFrom);
+      let tail;
+      if (moves.length) {
+        tail = ' — ' + moves.map((c) => c.type.toLowerCase() + ' moves to ' + fmtLong(c.day)).join(', and ') + '.';
+        const same = wk.filter((c) => !c.movedFrom);
+        if (same.length) tail += ' ' + same.map((c) => cap(c.type) + ' is still ' + fmtLong(c.day)).join('. ') + '.';
+      } else if (wk.length) {
+        tail = ' — collection that week is not affected: ' + wk.map((c) => c.type.toLowerCase() + ' on ' + fmtLong(c.day)).join(', ') + '.';
+      } else {
+        tail = ' — no collection is scheduled that week.';
+      }
+      out.push(hol.emoji + ' ' + long + ' is ' + hol.name + tail);
     }
     if (acts.length) {
       const ph = acts.map((t) => {
-        const schedToday = t === 'Garbage' ? (isG(d) && !weekHoliday(d)) : (isR(d) && !weekHoliday(d));
-        if (schedToday) return t.toLowerCase() + ' pickup';
-        const from = prevOf(d);
-        return t.toLowerCase() + ' pickup, moved from ' + WD[from.getDay()] + ' (' + weekHoliday(from).name + ' week)';
+        const moved = usualDayFor(d, t);
+        if (!moved) return t.toLowerCase() + ' pickup';
+        return t.toLowerCase() + ' pickup, moved from ' + WD[moved.getDay()];
       });
       out.push((hol ? '' : long + ' — ') + ph.join(' and ') + '. Carts out by 6 AM.');
     } else if (away.length && hol) {
-      const to = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
-      out.push(cap(away.join(' & ')) + ' moves to ' + fmtLong(to) + '.');
+      // the holiday sentence above already names where each collection went
     } else if (away.length) {
-      const to = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
-      out.push(long + ' — no ' + away.join(' or ') + ' this day: ' + weekHoliday(d).name + ' week pushes it to ' + fmtLong(to) + '.');
+      const dest = movedTargetFor(d, away[0] === 'garbage' ? 'Garbage' : 'Recycling');
+      out.push(long + ' — no ' + away.join(' or ') + ' this day. The city collects it ' + fmtLong(dest) + ' instead.');
     } else if (!hol) {
       let nxt = null;
       for (let i = 1; i <= 21 && !nxt; i++) {
@@ -868,16 +929,49 @@ button{font-family:inherit;cursor:pointer}
     renderSettings();
   });
 
+  // ── keeping the schedule available, always ───────────────────
+  // Three layers so a pickup day is never unknown:
+  //   1. the serverless function, which pulls the city's published feed live
+  //   2. whatever that returned last time, kept in this browser
+  //   3. the snapshot bundled with the app (works offline and on first run)
+  const SCHED_KEY = 'gc-sched-v1';
+  const useSchedule = (data, origin, checked) => {
+    if (!data || !Array.isArray(data.collections) || data.collections.length < 20) return false;
+    state.sched = { collections: data.collections, coverage: data.coverage, origin, checked };
+    renderAll();
+    tick();
+    scheduleNotif();
+    return true;
+  };
+  const loadSchedule = () => {
+    // start from the best offline copy so something correct is on screen at once
+    let cached = null;
+    try { cached = JSON.parse(LS.get(SCHED_KEY) || 'null'); } catch (e) {}
+    if (!useSchedule(cached, 'cache', cached && cached.checked)) {
+      fetch('/schedule-snapshot.json', { cache: 'force-cache' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((snap) => { if (!state.sched) useSchedule(snap, 'snapshot'); })
+        .catch(() => {});
+    }
+    // then refresh from the city's feed
+    fetch('/.netlify/functions/schedule', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((live) => {
+        if (!live || !live.ok || !Array.isArray(live.collections)) return;
+        const checked = new Date().toISOString().slice(0, 10);
+        if (useSchedule(live, 'live', checked)) {
+          try { LS.set(SCHED_KEY, JSON.stringify({ collections: live.collections, coverage: live.coverage, checked })); } catch (e) {}
+        }
+      })
+      .catch(() => {});
+  };
   // ── boot ───────────────────────────────────────────────────────
   applyTheme();
   renderAll();
   tick();
   setInterval(tick, 1000);
 
-  fetch('/.netlify/functions/schedule')
-    .then((r) => (r.ok ? r.json() : null))
-    .then((j) => { if (j && j.ok) { state.live = j; renderAll(); } })
-    .catch(() => {});
+  loadSchedule();
 
   scheduleNotif();
   if (state.notify && typeof Notification !== 'undefined' && Notification.permission === 'granted') pushSubscribe();
