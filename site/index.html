@@ -15,20 +15,25 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png">
 <style>
-/* Secondary text is darkened in Day and lightened in Night so it stays legible:
-   --sub 6.05:1 and --faint 4.91:1 on white; --faint 6.94:1 on the night card. */
+/* Warm, high-luminance text for older-adult readability. Ageing eyes lose
+   short-wavelength (blue/green) sensitivity, so secondary and helper text are
+   warm browns/creams rather than grays or blue-grays, and hierarchy comes from
+   size, weight and spacing -- never from fading or opacity.
+   Light on white: primary 18.88:1, secondary 12.85:1, helper 11.36:1.
+   Dark on #161618: primary 17.78:1, secondary 14.87:1, helper 13.07:1.
+   Every value is WCAG AAA; none is neutral gray. */
 :root{
-  --page:#f2f2f0;--bg:#ffffff;--ink:#1d1d1f;--sub:#626269;--faint:#707078;
-  --chip:#f5f5f3;--line:#f0efed;--note:#514f4d;--scheme:light;
+  --page:#f2f2f0;--bg:#ffffff;--ink:#111111;--sub:#3b2f2f;--faint:#4b3621;
+  --chip:#f5f5f3;--line:#f0efed;--note:#3b2f2f;--scheme:light;
 }
 :root[data-theme="dark"]{
-  --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#a0a0a5;
-  --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;--scheme:dark;
+  --page:#000000;--bg:#161618;--ink:#fffdf8;--sub:#f2e8d5;--faint:#ead9c0;
+  --chip:#232327;--line:#2a2a2e;--note:#f2e8d5;--scheme:dark;
 }
 @media (prefers-color-scheme:dark){
   :root[data-theme="system"]{
-    --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#a0a0a5;
-    --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;--scheme:dark;
+    --page:#000000;--bg:#161618;--ink:#fffdf8;--sub:#f2e8d5;--faint:#ead9c0;
+    --chip:#232327;--line:#2a2a2e;--note:#f2e8d5;--scheme:dark;
   }
 }
 :root[data-scale="0.9"] [data-scale-region]{zoom:0.9}
@@ -653,8 +658,10 @@ button{font-family:inherit;cursor:pointer}
       if (d.getTime() === T.getTime()) cls.push('today');
       const title = hol ? ' title="' + esc(hol.name) + (hol.service ? ' — no pickup' : ' — pickups run as usual') + '"' : '';
       const pickupCell = cls.includes('g') || cls.includes('r');
-      // themed holiday: tint the date and mark it with the holiday's emoji
-      const numStyle = hol && !pickupCell ? ' style="color:' + hol.tint + '"' : '';
+      // The holiday's emoji carries its identity; the date number itself keeps the
+      // high-contrast text colour, because a tinted number is informational text and
+      // several tints fell below AA (New Year’s was 2.42:1 on white).
+      const numStyle = '';
       const mark = hol ? '<span class="hem" title="' + esc(hol.name) + '">' + hol.emoji + '</span>' : '';
       html += '<div class="' + cls.join(' ') + '"' + title + ' data-d="' + n + '"><div class="n"' + numStyle + '>' + n + '</div><div class="u">' + mark + '</div></div>';
     }
