@@ -204,7 +204,7 @@ button{font-family:inherit;cursor:pointer}
       </div>
 
       <div class="upc">
-        <div class="upc-title">Upcoming</div>
+        <div class="upc-title" id="upcTitle">Upcoming</div>
         <div id="upcList"></div>
       </div>
 
@@ -507,18 +507,45 @@ button{font-family:inherit;cursor:pointer}
         hero.type + ' comes ' + fmt(hero.a.day) + ' instead of ' + fmt(hero.d) + '.';
     }
 
-    const list = $('upcList');
-    list.innerHTML = ups.map((u) => {
-      const date = u.a.moved
-        ? fmt(u.a.day) + ' · moved from ' + WD[u.d.getDay()].slice(0, 3) + ' (' + u.a.hol + ')'
-        : fmt(u.d);
-      return '<div class="upc-row">' +
-        '<span class="dot" style="background:' + u.color + '"></span>' +
-        '<div class="mid"><div class="t">' + esc(u.type) + '</div><div class="d">' + esc(date) + '</div></div>' +
-        '<div class="w">' + esc(rel(u.a.day, T)) + '</div></div>';
-    }).join('');
-
     $('sourceNote').textContent = state.live ? 'Live from Recycle by City.' : '';
+  };
+
+  const rowHtml = (color, type, date, when) =>
+    '<div class="upc-row">' +
+    '<span class="dot" style="background:' + color + '"></span>' +
+    '<div class="mid"><div class="t">' + esc(type) + '</div><div class="d">' + esc(date) + '</div></div>' +
+    '<div class="w">' + esc(when) + '</div></div>';
+
+  // the list follows the calendar: today's next six for the current month,
+  // the viewed month's full pickup list when browsing other months
+  const renderUpcoming = () => {
+    const T = todayMidnight();
+    const list = $('upcList');
+    if (state.monthOffset === 0) {
+      $('upcTitle').textContent = 'Upcoming';
+      list.innerHTML = upcomingPickups(T).map((u) => {
+        const date = u.a.moved
+          ? fmt(u.a.day) + ' · moved from ' + WD[u.d.getDay()].slice(0, 3) + ' (' + u.a.hol + ')'
+          : fmt(u.d);
+        return rowHtml(u.color, u.type, date, rel(u.a.day, T));
+      }).join('');
+      return;
+    }
+    const vm = new Date(T.getFullYear(), T.getMonth() + state.monthOffset, 1);
+    $('upcTitle').textContent = 'Pickups in ' + MO[vm.getMonth()] + (vm.getFullYear() !== T.getFullYear() ? ' ' + vm.getFullYear() : '');
+    const dim = new Date(vm.getFullYear(), vm.getMonth() + 1, 0).getDate();
+    let rows = '';
+    for (let n = 1; n <= dim; n++) {
+      const d = new Date(vm.getFullYear(), vm.getMonth(), n);
+      for (const [on, isAct, type, color] of [[showG(), isActualG, 'Garbage', 'var(--ink)'], [showR(), isActualR, 'Recycling', ACCENT]]) {
+        if (!on || !isAct(d)) continue;
+        const schedToday = type === 'Garbage' ? (isG(d) && !weekHoliday(d)) : (isR(d) && !weekHoliday(d));
+        const from = prevOf(d);
+        const date = schedToday ? fmt(d) : fmt(d) + ' · moved from ' + WD[from.getDay()].slice(0, 3) + ' (' + weekHoliday(from) + ')';
+        rows += rowHtml(color, type, date, d >= T ? rel(d, T) : '');
+      }
+    }
+    list.innerHTML = rows;
   };
 
   const renderCalendar = () => {
@@ -625,7 +652,7 @@ button{font-family:inherit;cursor:pointer}
     $('notifStatus').className = asNote ? 'notif-note' : 'hint';
   };
 
-  const renderAll = () => { renderHero(); renderCalendar(); renderSettings(); };
+  const renderAll = () => { renderHero(); renderUpcoming(); renderCalendar(); renderSettings(); };
 
   const tick = () => {
     const now = new Date();
@@ -666,6 +693,7 @@ button{font-family:inherit;cursor:pointer}
     state.monthOffset += delta;
     state.selDay = null;
     renderCalendar();
+    renderUpcoming();
     const g = $('calGrid');
     g.classList.remove('anim-left', 'anim-right');
     void g.offsetWidth; // restart the slide animation
