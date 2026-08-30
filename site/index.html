@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en" data-theme="system" data-scale="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pickup Schedule — 4248 W. Potomac Ave</title>
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f0">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
+<!-- Web Push on iPhone requires Add to Home Screen (iOS 16.4+); these make the installed app standalone -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pickup">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d1d1f'/%3E%3Ccircle cx='22' cy='32' r='8' fill='%233EC163'/%3E%3Ccircle cx='42' cy='32' r='8' fill='%235FC9EE'/%3E%3C/svg%3E">
+<style>
+:root{
+  --page:#f2f2f0;--bg:#ffffff;--ink:#1d1d1f;--sub:#86868b;--faint:#b0aeab;
+  --chip:#f5f5f3;--line:#f0efed;--note:#514f4d;
+  --frame-bg:#F2F2F7;--sb:#000;--home:rgba(0,0,0,0.25);
+}
+:root[data-theme="dark"]{
+  --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#6e6e73;
+  --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;
+  --frame-bg:#000;--sb:#fff;--home:rgba(255,255,255,0.7);
+}
+@media (prefers-color-scheme:dark){
+  :root[data-theme="system"]{
+    --page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#6e6e73;
+    --chip:#232327;--line:#2a2a2e;--note:#c7c7cc;
+    --frame-bg:#000;--sb:#fff;--home:rgba(255,255,255,0.7);
+  }
+}
+:root[data-scale="0.9"] [data-scale-region]{zoom:0.9}
+:root[data-scale="1.15"] [data-scale-region]{zoom:1.15}
+:root[data-scale="1.3"] [data-scale-region]{zoom:1.3}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--sub)}
+button{font-family:inherit;cursor:pointer}
+[hidden]{display:none!important}
+
+.stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 0}
+
+/* iOS 26 device frame (ported from the ios-frame starter) */
+.frame{
+  width:430px;height:880px;border-radius:48px;overflow:hidden;position:relative;flex:none;
+  background:var(--frame-bg);
+  box-shadow:0 40px 80px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.12);
+  zoom:var(--fit,1);
+}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:126px;height:37px;border-radius:24px;background:#000;z-index:50}
+.statusbar{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;gap:154px;align-items:center;justify-content:center;padding:21px 24px 19px;width:100%;color:var(--sb)}
+.statusbar .sb-time{flex:1;height:22px;display:flex;align-items:center;justify-content:center;padding-top:1.5px}
+.statusbar .sb-time span{font-family:-apple-system,"SF Pro",system-ui;font-weight:590;font-size:17px;line-height:22px}
+.statusbar .sb-icons{flex:1;height:22px;display:flex;align-items:center;justify-content:center;gap:7px;padding-top:1px;padding-right:1px}
+.homebar{position:absolute;bottom:0;left:0;right:0;z-index:60;height:34px;display:flex;justify-content:center;align-items:flex-end;padding-bottom:8px;pointer-events:none}
+.homebar i{width:139px;height:5px;border-radius:100px;background:var(--home)}
+
+.screen{position:relative;height:100%;background:var(--bg)}
+.scroll{height:100%;overflow-y:auto;padding:72px 26px 48px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+
+/* header */
+.top{padding-top:10px}
+.now-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.now-line{font-size:13px;color:var(--sub)}
+.chip-btn{border:none;background:var(--chip);color:var(--ink);width:30px;height:30px;border-radius:15px;font-size:15px;padding:0}
+.eyebrow{font-size:11px;letter-spacing:0.14em;color:var(--sub);font-weight:600}
+.address{font-size:17px;font-weight:600;color:var(--ink);margin-top:3px}
+
+/* hero */
+.hero{margin-top:34px}
+.hero-label{font-size:15px;color:var(--sub)}
+.hero-when{font-size:54px;font-weight:700;letter-spacing:-0.02em;color:var(--ink);line-height:1.05;margin-top:4px}
+.hero-type-row{display:flex;align-items:center;gap:9px;margin-top:12px}
+.dot{width:10px;height:10px;border-radius:5px;display:block;flex:none}
+.hero-type{font-size:17px;font-weight:600;color:var(--ink)}
+.hero-sub{font-size:14px;color:var(--sub);margin-top:5px}
+.then-line{font-size:14px;color:var(--sub);margin-top:14px}
+
+/* countdown */
+.count{margin-top:26px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.count .v{font-size:36px;font-weight:700;letter-spacing:-0.01em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;text-align:center}
+.count .l{font-size:11px;color:var(--sub);margin-top:5px;text-align:center}
+.count-caption{text-align:center;font-size:12px;color:var(--faint);margin-top:10px}
+
+/* holiday note */
+.holiday{margin-top:22px;background:var(--chip);border-radius:12px;padding:13px 16px;font-size:13px;line-height:1.45;color:var(--note)}
+
+/* calendar */
+.cal{margin-top:38px}
+.cal-head{display:flex;align-items:baseline;justify-content:space-between}
+.cal-title{font-size:17px;font-weight:600;color:var(--ink)}
+.cal-nav{display:flex;gap:6px}
+.dow-row{display:grid;grid-template-columns:repeat(7,1fr);margin-top:16px}
+.dow-row div{text-align:center;font-size:11px;font-weight:600;color:var(--faint);padding-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px}
+.cell{height:42px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.cell .n{width:34px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:400;color:var(--ink)}
+.cell.blank .n{width:auto;height:auto}
+.cell.g .n{background:#3EC163;color:#14161a;font-weight:600}
+.cell.r .n{background:#5FC9EE;color:#14161a;font-weight:600}
+.cell.today .n{box-shadow:inset 0 0 0 2px var(--ink);font-weight:600}
+.cell .u{display:flex;gap:3px;height:5px}
+.legend{display:flex;gap:18px;margin-top:10px}
+.legend div{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)}
+.sw{width:12px;height:12px;border-radius:3px;display:block}
+.sw.g{background:#3EC163}
+.sw.r{background:#5FC9EE}
+
+/* upcoming */
+.upc{margin-top:38px}
+.upc-title{font-size:17px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.upc-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.upc-row .mid{flex:1}
+.upc-row .t{font-size:15px;font-weight:500;color:var(--ink)}
+.upc-row .d{font-size:13px;color:var(--sub);margin-top:1px}
+.upc-row .w{font-size:13px;color:var(--sub)}
+
+.footnote{margin-top:26px;font-size:12px;line-height:1.5;color:var(--faint)}
+
+/* settings */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,0.35);z-index:20}
+.sheet{position:absolute;top:120px;right:20px;width:280px;background:var(--bg);border-radius:18px;padding:18px 20px 22px;box-shadow:0 12px 40px rgba(0,0,0,0.25)}
+.sheet-head{display:flex;align-items:center;justify-content:space-between}
+.sheet-title{font-size:17px;font-weight:600;color:var(--ink)}
+.done-btn{border:none;background:none;color:var(--ink);font-size:15px;font-weight:600;padding:4px 0}
+.sect{font-size:11px;letter-spacing:0.14em;color:var(--sub);font-weight:600;margin-top:22px}
+.seg{display:flex;gap:0;background:var(--chip);border-radius:10px;padding:3px;margin-top:10px}
+.seg button{flex:1;border:none;padding:7px 0;border-radius:8px;font-size:13px;background:transparent;color:var(--ink);font-weight:400;box-shadow:none}
+.seg button.on{background:var(--bg);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.seg.small button{font-size:12px}
+.hint{font-size:12px;color:var(--faint);margin-top:10px}
+.notif-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+.notif-label{font-size:14px;color:var(--ink)}
+.toggle{width:46px;height:28px;border-radius:14px;border:none;padding:2px;background:var(--chip);display:flex;justify-content:flex-start;align-items:center;transition:background .2s;flex:none}
+.toggle.on{background:#3EC163;justify-content:flex-end}
+.toggle i{width:24px;height:24px;border-radius:12px;background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.25);display:block}
+.seg.notify-time{margin-top:12px}
+
+/* real phones: the app is the screen — drop the fake bezel and chrome */
+@media (max-width:560px){
+  .stage{padding:0;min-height:100dvh}
+  .frame{width:100%;height:100dvh;border-radius:0;box-shadow:none;zoom:1}
+  .island,.statusbar,.homebar{display:none}
+  .scroll{padding:calc(24px + env(safe-area-inset-top)) 26px calc(48px + env(safe-area-inset-bottom))}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+<div class="frame">
+  <div class="island"></div>
+  <div class="statusbar">
+    <div class="sb-time"><span>9:41</span></div>
+    <div class="sb-icons">
+      <svg width="19" height="12" viewBox="0 0 19 12" fill="currentColor" aria-hidden="true">
+        <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7"/>
+        <rect x="4.8" y="5" width="3.2" height="7" rx="0.7"/>
+        <rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7"/>
+        <rect x="14.4" y="0" width="3.2" height="12" rx="0.7"/>
+      </svg>
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" aria-hidden="true">
+        <path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z"/>
+        <path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z"/>
+        <circle cx="8.5" cy="10.5" r="1.5"/>
+      </svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" aria-hidden="true">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke="currentColor" stroke-opacity="0.35" fill="none"/>
+        <rect x="2" y="2" width="20" height="9" rx="2" fill="currentColor"/>
+        <path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill="currentColor" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="screen">
+    <div class="scroll" data-scale-region>
+      <div class="top">
+        <div class="now-row">
+          <div class="now-line" id="nowLine"></div>
+          <button class="chip-btn" id="gearBtn" aria-label="Settings">&#9881;&#65038;</button>
+        </div>
+        <div class="eyebrow">PICKUP SCHEDULE</div>
+        <div class="address">4248 W. Potomac Ave</div>
+      </div>
+
+      <div class="hero">
+        <div class="hero-label">Next pickup</div>
+        <div class="hero-when" id="heroWhen"></div>
+        <div class="hero-type-row">
+          <span class="dot" id="heroDot"></span>
+          <span class="hero-type" id="heroType"></span>
+        </div>
+        <div class="hero-sub" id="heroSub"></div>
+        <div class="then-line" id="thenLine"></div>
+        <div class="count">
+          <div><div class="v" id="cd0">00</div><div class="l">Days</div></div>
+          <div><div class="v" id="cd1">00</div><div class="l">Hours</div></div>
+          <div><div class="v" id="cd2">00</div><div class="l">Minutes</div></div>
+          <div><div class="v" id="cd3">00</div><div class="l">Seconds</div></div>
+        </div>
+        <div class="count-caption" id="cdCaption"></div>
+      </div>
+
+      <div class="holiday" id="holidayNote" hidden></div>
+
+      <div class="cal">
+        <div class="cal-head">
+          <div class="cal-title" id="monthLabel"></div>
+          <div class="cal-nav">
+            <button class="chip-btn" id="prevBtn" aria-label="Previous month">&#8249;</button>
+            <button class="chip-btn" id="nextBtn" aria-label="Next month">&#8250;</button>
+          </div>
+        </div>
+        <div class="dow-row" id="dowRow"></div>
+        <div class="grid" id="calGrid"></div>
+        <div class="legend">
+          <div><span class="sw g"></span>Garbage &#183; Thursdays</div>
+          <div><span class="sw r"></span>Recycling &#183; every other Tuesday</div>
+        </div>
+      </div>
+
+      <div class="upc">
+        <div class="upc-title">Upcoming</div>
+        <div id="upcList"></div>
+      </div>
+
+      <div class="footnote">Carts out by 6&#8202;AM. Chicago Blue Cart program &#8212; no pickups on city holidays; service runs a day late for the rest of that week. <span id="sourceNote"></span></div>
+    </div>
+
+    <div class="scrim" id="scrim" hidden>
+      <div class="sheet" data-scale-region id="sheet">
+        <div class="sheet-head">
+          <div class="sheet-title">Settings</div>
+          <button class="done-btn" id="doneBtn">Done</button>
+        </div>
+        <div class="sect">APPEARANCE</div>
+        <div class="seg" id="themeSeg">
+          <button data-val="Day">Day</button>
+          <button data-val="Night">Night</button>
+          <button data-val="System">System</button>
+        </div>
+        <div class="hint">System follows your device&#8217;s appearance.</div>
+        <div class="sect">TEXT SIZE</div>
+        <div class="seg" id="scaleSeg">
+          <button data-val="0.9">Small</button>
+          <button data-val="1">Default</button>
+          <button data-val="1.15">Large</button>
+          <button data-val="1.3">XL</button>
+        </div>
+        <div class="hint">Makes everything on the page larger or smaller.</div>
+        <div class="sect">NOTIFICATIONS</div>
+        <div class="notif-row">
+          <div class="notif-label">Pickup reminders</div>
+          <button class="toggle" id="notifToggle" aria-label="Pickup reminders"><i></i></button>
+        </div>
+        <div class="seg small notify-time" id="timeSeg" hidden>
+          <button data-val="evening">Night before, 7&#8202;PM</button>
+          <button data-val="morning">Morning, 5:30&#8202;AM</button>
+        </div>
+        <div class="hint" id="notifStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="homebar"><i></i></div>
+</div>
+</div>
+
+<script>
+'use strict';
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const LS = {
+    get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
+  };
+
+  const ADDRESS = '4248 W. Potomac Ave';
+  const ACCENT = '#3572b0';
+  const WEEK_START_MONDAY = false;
+  const DAY = 864e5;
+  const MO = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const WD = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  // Chicago city holidays (pickup pauses; rest of that week runs a day late)
+  const HOLS = {
+    '2026-0-1': "New Year's Day", '2026-0-19': 'MLK Day', '2026-1-12': "Lincoln's Birthday",
+    '2026-2-2': 'Pulaski Day', '2026-4-25': 'Memorial Day', '2026-5-19': 'Juneteenth',
+    '2026-6-3': 'Independence Day (obs.)', '2026-8-7': 'Labor Day', '2026-9-12': 'Columbus Day',
+    '2026-10-11': 'Veterans Day', '2026-10-26': 'Thanksgiving', '2026-11-25': 'Christmas Day',
+    '2027-0-1': "New Year's Day", '2027-0-18': 'MLK Day', '2027-1-12': "Lincoln's Birthday",
+    '2027-2-1': 'Pulaski Day', '2027-4-31': 'Memorial Day', '2027-5-18': 'Juneteenth (obs.)',
+    '2027-6-5': 'Independence Day (obs.)', '2027-8-6': 'Labor Day',
+  };
+
+  const state = {
+    monthOffset: 0,
+    live: null,
+    theme: LS.get('gc-theme') || null,
+    scale: parseFloat(LS.get('gc-scale')) || 1,
+    notify: LS.get('gc-notify') === '1',
+    notifyTime: LS.get('gc-notify-time') || 'evening',
+    notifPerm: typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
+    pushActive: false,
+  };
+  let notifTimer = null;
+  let lastDayKey = '';
+
+  // ── schedule rules ─────────────────────────────────────────────
+  // Built-in: garbage every Thursday, recycling every other Tuesday
+  // (anchored Aug 11, 2026). The Netlify function may override from
+  // Recycle by City; a live anchor only counts if it lands on rDow.
+  const rules = () => {
+    const live = state.live;
+    const gDow = live && live.garbageDow != null ? live.garbageDow : 4;
+    const rDow = live && live.recyclingDow != null ? live.recyclingDow : 2;
+    let anchor = new Date(2026, 7, 11);
+    if (live && live.recyclingAnchor) {
+      const a = live.recyclingAnchor.split('-').map(Number);
+      const c = new Date(a[0], a[1] - 1, a[2]);
+      if (c.getDay() === rDow) anchor = c;
+    }
+    return { gDow, rDow, anchor };
+  };
+  const isG = (d) => d.getDay() === rules().gDow;
+  const isR = (d) => {
+    const { rDow, anchor } = rules();
+    if (d.getDay() !== rDow) return false;
+    const diff = Math.round((d - anchor) / DAY);
+    return ((diff % 14) + 14) % 14 === 0;
+  };
+  const holOf = (d) => HOLS[d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate()];
+  // holiday earlier in the same Mon-Sun week, on or before pickup day
+  const weekHoliday = (d) => {
+    for (let i = 0; i <= (d.getDay() + 6) % 7; i++) {
+      const p = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i);
+      const h = holOf(p);
+      if (h) return h;
+    }
+    return null;
+  };
+
+  const todayMidnight = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
+  const fmt = (d) => WD[d.getDay()].slice(0, 3) + ', ' + MO[d.getMonth()].slice(0, 3) + ' ' + d.getDate();
+  const rel = (d, T) => {
+    const n = Math.round((d - T) / DAY);
+    return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n < 7 ? WD[d.getDay()] : 'in ' + n + ' days';
+  };
+  const fmtTime = (t) => {
+    const h = t.getHours() % 12 || 12;
+    const m = String(t.getMinutes()).padStart(2, '0');
+    return h + ':' + m + ' ' + (t.getHours() >= 12 ? 'PM' : 'AM');
+  };
+  const p2 = (x) => String(x).padStart(2, '0');
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+  const upcomingPickups = (T) => {
+    const ups = [];
+    for (let i = 0; i < 70 && ups.length < 6; i++) {
+      const d = new Date(T.getTime() + i * DAY);
+      if (isG(d)) ups.push({ d, type: 'Garbage', color: 'var(--ink)' });
+      if (isR(d)) ups.push({ d, type: 'Recycling', color: ACCENT });
+    }
+    return ups;
+  };
+
+  // next pickup worth reminding about (16-day scan), with its fire time
+  const reminderTarget = () => {
+    const { gDow } = rules();
+    const now = new Date();
+    const T = todayMidnight();
+    const evening = state.notifyTime !== 'morning';
+    for (let i = 0; i < 16; i++) {
+      const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
+      const g = d.getDay() === gDow;
+      const r = isR(d);
+      if (!g && !r) continue;
+      const type = g && r ? 'Garbage & recycling' : g ? 'Garbage' : 'Recycling';
+      const t = evening
+        ? new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 19, 0, 0)
+        : new Date(d.getFullYear(), d.getMonth(), d.getDate(), 5, 30, 0);
+      if (t > now) return { target: t, type, day: d };
+    }
+    return null;
+  };
+
+  // ── theme & scale ──────────────────────────────────────────────
+  const applyTheme = () => {
+    const t = (state.theme || 'System').toLowerCase();
+    document.documentElement.setAttribute('data-theme', t === 'day' ? 'light' : t === 'night' ? 'dark' : 'system');
+    document.documentElement.setAttribute('data-scale', String(state.scale || 1));
+  };
+
+  // ── notifications ──────────────────────────────────────────────
+  const pushSubscribe = async () => {
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      const kr = await fetch('/.netlify/functions/subscribe');
+      if (!kr.ok) return;
+      const { publicKey } = await kr.json();
+      if (!publicKey) return;
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      let b64 = publicKey.replace(/-/g, '+').replace(/_/g, '/');
+      b64 += '='.repeat((4 - (b64.length % 4)) % 4);
+      const appKey = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appKey });
+      const r = await fetch('/.netlify/functions/subscribe', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ subscription: sub.toJSON(), time: state.notifyTime }),
+      });
+      if (r.ok) { state.pushActive = true; clearTimeout(notifTimer); renderSettings(); }
+    } catch (e) {}
+  };
+  const pushUnsubscribe = async () => {
+    try {
+      state.pushActive = false;
+      if (!('serviceWorker' in navigator)) return;
+      const reg = await navigator.serviceWorker.getRegistration();
+      const sub = reg && (await reg.pushManager.getSubscription());
+      if (sub) {
+        await fetch('/.netlify/functions/subscribe', {
+          method: 'DELETE',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ endpoint: sub.endpoint }),
+        });
+        await sub.unsubscribe();
+      }
+    } catch (e) {}
+  };
+  const scheduleNotif = () => {
+    clearTimeout(notifTimer);
+    if (!(state.notify && typeof Notification !== 'undefined' && Notification.permission === 'granted')) return;
+    if (state.pushActive) return; // server push handles delivery
+    const nx = reminderTarget();
+    if (!nx) return;
+    // setTimeout can't span weeks reliably; cap at 20 days and re-arm on fire
+    const ms = Math.min(nx.target - new Date(), 20 * DAY);
+    notifTimer = setTimeout(() => {
+      try {
+        new Notification(nx.type + ' pickup ' + (state.notifyTime === 'morning' ? 'this morning' : 'tomorrow'),
+          { body: 'Carts out by 6 AM — ' + ADDRESS });
+      } catch (e) {}
+      setTimeout(scheduleNotif, 60000);
+    }, ms);
+  };
+  const toggleNotify = () => {
+    if (state.notify) {
+      LS.set('gc-notify', '0');
+      clearTimeout(notifTimer);
+      state.notify = false;
+      pushUnsubscribe();
+      renderSettings();
+      return;
+    }
+    if (typeof Notification === 'undefined') { state.notifPerm = 'unsupported'; renderSettings(); return; }
+    const enable = () => {
+      LS.set('gc-notify', '1');
+      state.notify = true;
+      state.notifPerm = 'granted';
+      scheduleNotif();
+      pushSubscribe();
+      renderSettings();
+    };
+    if (Notification.permission === 'granted') enable();
+    else if (Notification.permission === 'denied') { state.notifPerm = 'denied'; renderSettings(); }
+    else Notification.requestPermission().then((p) => { state.notifPerm = p; if (p === 'granted') enable(); else renderSettings(); }).catch(() => {});
+  };
+
+  // ── rendering ──────────────────────────────────────────────────
+  const renderHero = () => {
+    const T = todayMidnight();
+    const ups = upcomingPickups(T);
+    const hero = ups[0], then = ups[1];
+    if (!hero) return;
+    $('heroWhen').textContent = rel(hero.d, T);
+    $('heroDot').style.background = hero.color;
+    $('heroType').textContent = hero.type + ' pickup';
+    $('heroSub').textContent = fmt(hero.d) + ' · carts out by 6 AM';
+    $('thenLine').textContent = then ? 'Then ' + then.type.toLowerCase() + ' on ' + fmt(then.d) : '';
+    const hol = weekHoliday(hero.d);
+    $('holidayNote').hidden = !hol;
+    if (hol) $('holidayNote').textContent = hol + ' falls this week — this pickup may run a day late.';
+
+    const list = $('upcList');
+    list.innerHTML = ups.map((u) => {
+      const h = weekHoliday(u.d);
+      const date = fmt(u.d) + (h ? ' · may run late (' + h + ')' : '');
+      return '<div class="upc-row">' +
+        '<span class="dot" style="background:' + u.color + '"></span>' +
+        '<div class="mid"><div class="t">' + esc(u.type) + '</div><div class="d">' + esc(date) + '</div></div>' +
+        '<div class="w">' + esc(rel(u.d, T)) + '</div></div>';
+    }).join('');
+
+    $('sourceNote').textContent = state.live ? 'Live from Recycle by City.' : '';
+  };
+
+  const renderCalendar = () => {
+    const T = todayMidnight();
+    const vm = new Date(T.getFullYear(), T.getMonth() + state.monthOffset, 1);
+    $('monthLabel').textContent = MO[vm.getMonth()] + ' ' + vm.getFullYear();
+    const labels = WEEK_START_MONDAY ? ['M','T','W','T','F','S','S'] : ['S','M','T','W','T','F','S'];
+    $('dowRow').innerHTML = labels.map((d) => '<div>' + d + '</div>').join('');
+    const startDow = (vm.getDay() - (WEEK_START_MONDAY ? 1 : 0) + 7) % 7;
+    const dim = new Date(vm.getFullYear(), vm.getMonth() + 1, 0).getDate();
+    let html = '';
+    for (let i = 0; i < startDow; i++) html += '<div class="cell blank"><div class="n"></div><div class="u"></div></div>';
+    for (let n = 1; n <= dim; n++) {
+      const d = new Date(vm.getFullYear(), vm.getMonth(), n);
+      const cls = ['cell'];
+      if (isG(d)) cls.push('g'); else if (isR(d)) cls.push('r');
+      if (d.getTime() === T.getTime()) cls.push('today');
+      html += '<div class="' + cls.join(' ') + '"><div class="n">' + n + '</div><div class="u"></div></div>';
+    }
+    $('calGrid').innerHTML = html;
+  };
+
+  const renderSettings = () => {
+    const themeProp = state.theme || 'System';
+    for (const b of $('themeSeg').children) b.classList.toggle('on', b.dataset.val === themeProp);
+    for (const b of $('scaleSeg').children) b.classList.toggle('on', parseFloat(b.dataset.val) === state.scale);
+    const notifyOn = state.notify && state.notifPerm === 'granted';
+    $('notifToggle').classList.toggle('on', notifyOn);
+    $('timeSeg').hidden = !notifyOn;
+    for (const b of $('timeSeg').children) b.classList.toggle('on', b.dataset.val === state.notifyTime);
+    let status = 'Get a heads-up before each pickup.';
+    if (state.notifPerm === 'unsupported') status = 'Notifications aren’t available in this browser view.';
+    else if (state.notifPerm === 'denied') status = 'Notifications are blocked — allow them in browser settings.';
+    else if (notifyOn) {
+      const nx = reminderTarget();
+      if (nx) status = 'Next reminder: ' + fmt(nx.target) + ', ' + fmtTime(nx.target) + '.' +
+        (state.pushActive ? ' Delivered even when this page is closed.' : '');
+    }
+    $('notifStatus').textContent = status;
+  };
+
+  const renderAll = () => { renderHero(); renderCalendar(); renderSettings(); };
+
+  const tick = () => {
+    const now = new Date();
+    const h12 = now.getHours() % 12 || 12;
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    $('nowLine').textContent = WD[now.getDay()] + ', ' + MO[now.getMonth()] + ' ' + now.getDate() +
+      ' · ' + h12 + ':' + mm + ' ' + (now.getHours() >= 12 ? 'PM' : 'AM');
+
+    const dayKey = now.toDateString();
+    if (dayKey !== lastDayKey) { lastDayKey = dayKey; renderAll(); }
+
+    // countdown to the next garbage carts-out deadline (6:00 AM)
+    const T = todayMidnight();
+    let target = null, targetDate = null;
+    for (let i = 0; i < 9 && !target; i++) {
+      const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
+      if (isG(d)) {
+        const t6 = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 6, 0, 0);
+        if (t6 > now) { target = t6; targetDate = d; }
+      }
+    }
+    const left = target ? Math.max(0, target - now) : 0;
+    $('cd0').textContent = p2(Math.floor(left / DAY));
+    $('cd1').textContent = p2(Math.floor(left / 36e5) % 24);
+    $('cd2').textContent = p2(Math.floor(left / 6e4) % 60);
+    $('cd3').textContent = p2(Math.floor(left / 1e3) % 60);
+    $('cdCaption').textContent = targetDate ? 'Until garbage carts are due out · ' + fmt(targetDate) + ', 6:00 AM' : '';
+  };
+
+  // ── wiring ─────────────────────────────────────────────────────
+  $('gearBtn').addEventListener('click', () => { $('scrim').hidden = false; renderSettings(); });
+  $('doneBtn').addEventListener('click', () => { $('scrim').hidden = true; });
+  $('scrim').addEventListener('click', () => { $('scrim').hidden = true; });
+  $('sheet').addEventListener('click', (e) => e.stopPropagation());
+  $('prevBtn').addEventListener('click', () => { state.monthOffset--; renderCalendar(); });
+  $('nextBtn').addEventListener('click', () => { state.monthOffset++; renderCalendar(); });
+  $('themeSeg').addEventListener('click', (e) => {
+    const v = e.target.dataset && e.target.dataset.val;
+    if (!v) return;
+    state.theme = v; LS.set('gc-theme', v); applyTheme(); renderSettings();
+  });
+  $('scaleSeg').addEventListener('click', (e) => {
+    const v = e.target.dataset && e.target.dataset.val;
+    if (!v) return;
+    state.scale = parseFloat(v); LS.set('gc-scale', v); applyTheme(); renderSettings();
+  });
+  $('timeSeg').addEventListener('click', (e) => {
+    const v = e.target.dataset && e.target.dataset.val;
+    if (!v) return;
+    state.notifyTime = v; LS.set('gc-notify-time', v);
+    scheduleNotif();
+    if (state.pushActive) pushSubscribe();
+    renderSettings();
+  });
+  $('notifToggle').addEventListener('click', toggleNotify);
+
+  // desktop presentation: scale the device frame to fit short windows
+  const fit = () => {
+    if (window.innerWidth <= 560) { document.documentElement.style.removeProperty('--fit'); return; }
+    const s = Math.min(1, (window.innerHeight - 64) / 880, (window.innerWidth - 32) / 430);
+    document.documentElement.style.setProperty('--fit', s.toFixed(4));
+  };
+  window.addEventListener('resize', fit);
+
+  // ── boot ───────────────────────────────────────────────────────
+  applyTheme();
+  fit();
+  renderAll();
+  tick();
+  setInterval(tick, 1000);
+
+  fetch('/.netlify/functions/schedule')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j) => { if (j && j.ok) { state.live = j; renderAll(); } })
+    .catch(() => {});
+
+  scheduleNotif();
+  if (state.notify && typeof Notification !== 'undefined' && Notification.permission === 'granted') pushSubscribe();
+})();
+</script>
+</body>
+</html>

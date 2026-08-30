@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style data-omelette-injected>html,body{background:transparent}</style><script data-omelette-injected>(()=>{{const n=new URLSearchParams(location.search).get("theme");if(n==="light"||n==="dark"){document.documentElement.dataset.theme=n}}{if(new URLSearchParams(location.search).get("_omthumb")==="1"){const n=(f)=>{const g=f.focus;if(!g)return;f.focus=function(h){g.call(this,{...h,preventScroll:true})}};n(HTMLElement.prototype);n(SVGElement.prototype);if(typeof MathMLElement!=="undefined"){n(MathMLElement.prototype)}const d=(f)=>{f.removeAttribute("autofocus");f.inert=true;if(!(f instanceof HTMLElement))f.removeAttribute("tabindex")};const p=(f)=>{if(f.hasAttribute("autofocus"))d(f);for(const g of f.querySelectorAll("[autofocus]")){d(g)}};p(document.documentElement);new MutationObserver((f)=>{for(const g of f){for(const h of g.addedNodes){if(h.nodeType===1)p(h)}}}).observe(document,{childList:true,subtree:true})}}{const n=()=>{try{if(document.querySelector('meta[name="color-scheme"]'))return;const d=getComputedStyle(document.documentElement).getPropertyValue("color-scheme").trim();if(d&&d!=="normal")return;const p=(y)=>{if(!y)return null;const m=getComputedStyle(y).backgroundColor.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+%?))?\s*\)$/);if(!m)return null;const w=m[4]==null?1:parseFloat(m[4])/(m[4].endsWith("%")?100:1);if(w<0.99)return null;return[+m[1],+m[2],+m[3]]};const f=p(document.body)||p(document.documentElement);if(!f)return;const g=(y)=>{const m=y/255;return m<=0.04045?m/12.92:((m+0.055)/1.055)**2.4};const h=0.2126*g(f[0])+0.7152*g(f[1])+0.0722*g(f[2]);document.documentElement.style.setProperty("color-scheme",h<0.4?"dark":"light")}catch{}};if(document.readyState==="complete")n();else window.addEventListener("load",n)}var I=["https://claude.ai","https://preview.claude.ai","https://98147436-e464-40b7-b0f6-fe13bff71550.claudeusercontent.com"];var B=true;var K=false;var C=()=>{};if(K===true){try{const n=setTimeout.bind(window);const d=1e4;const p=15;const f=1e4;const g=120000;const h=200;const y=(o)=>{try{let r;if(typeof o==="string")r=o;else if(o instanceof URL)r=o.href;else if(typeof Request!=="undefined"&&o instanceof Request)r=o.url;else return null;if(!r)return null;const l=document.baseURI;const i=new URL(r,l);if(i.protocol!=="http:"&&i.protocol!=="https:")return null;if(i.origin!==new URL(l).origin)return null;return i.origin+i.pathname}catch{return null}};const m=new Map;const w=(o)=>{let r=m.get(o);if(!r){if(m.size>=h){const l=m.keys().next().value;if(l!==undefined)m.delete(l)}r={fails:[],until:0,cooldown:f,hard:false};m.set(o,r)}return r};const R=(o)=>{const r=m.get(o);return r!==undefined&&r.until>Date.now()};const O=(o,r)=>{const l=Date.now();const i=w(o);if(r)i.hard=true;if(i.until>l)return;i.fails.push(l);while(i.fails.length>0&&i.fails[0]<=l-d)i.fails.shift();if(i.fails.length>=p){i.until=l+i.cooldown;if(i.hard)i.cooldown=Math.min(i.cooldown*2,g);i.fails.length=0;try{n(()=>{try{S(true)}catch{}},i.until-l+100)}catch{}console.warn("[omelette] asset circuit breaker: pausing requests to "+o+" for "+Math.round((i.until-l)/1000)+"s after "+p+" failures in "+d/1000+"s")}};const e=(o)=>{m.delete(o)};const t=100;const a=new WeakMap;const u=new Set;let s=null;const S=(o)=>{for(const r of Array.from(u)){try{const l=a.get(r);if(l===undefined){u.delete(r);continue}if(o){const i=y(l);if(i!==null&&R(i))continue}a.delete(r);u.delete(r);if(s!==null)s.call(r,l)}catch{}}};C=()=>{try{m.clear();S(false)}catch{}};document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")C()});const _=window.fetch;if(typeof _==="function"){const o=function(...r){let l=null;try{l=y(r[0])}catch{}if(l!==null&&R(l)){let c;try{if(r[1]&&r[1].signal!==undefined){c=r[1].signal||undefined}else if(typeof Request!=="undefined"&&r[0]instanceof Request){c=r[0].signal||undefined}}catch{c=undefined}return new Promise((k,b)=>{const E=()=>{try{return c.reason!==undefined?c.reason:new DOMException("The operation was aborted.","AbortError")}catch{return new DOMException("The operation was aborted.","AbortError")}};try{if(c&&c.aborted){b(E());return}}catch{}let T=false;const j=()=>{if(T)return;T=true;b(E())};try{if(c)c.addEventListener("abort",j,{once:true})}catch{}n(()=>{if(T)return;T=true;try{if(c)c.removeEventListener("abort",j)}catch{}let L;try{L=new Response(null,{status:429,statusText:"Too Many Requests",headers:{"Retry-After":"10"}})}catch{L={ok:false,status:429}}k(L)},250)})}const i=_.apply(window,r);if(l!==null){const c=l;i.then((k)=>{try{if(k.ok)e(c);else if(k.status===401||k.status===403||k.status===404||k.status===429){O(c,k.status!==404)}}catch{}},()=>{})}return i};window.fetch=o}const v=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,"src");if(v!==undefined&&v.set!==undefined&&v.get!==undefined){const o=v.set;s=o;Object.defineProperty(HTMLImageElement.prototype,"src",{configurable:true,enumerable:v.enumerable,get:v.get,set(r){const l=`${r}`;try{const i=y(l);if(i!==null&&R(i)){a.set(this,l);if(u.size<t)u.add(this);return}}catch{}try{a.delete(this);u.delete(this)}catch{}o.call(this,l)}})}try{const o=HTMLImageElement.prototype.setAttribute;HTMLImageElement.prototype.setAttribute=function(r,l){if(arguments.length<2){o.apply(this,arguments);return}if(typeof r==="string"&&r.toLowerCase()==="src"){const i=`${l}`;try{const c=y(i);if(c!==null&&R(c)){a.set(this,i);if(u.size<t)u.add(this);return}a.delete(this);u.delete(this)}catch{}o.call(this,r,i);return}o.call(this,r,l)}}catch{}window.addEventListener("error",(o)=>{try{const r=o.target;if(r instanceof HTMLImageElement){const l=y(r.currentSrc||r.src||"");if(l!==null)O(l,true)}}catch{}},true);window.addEventListener("load",(o)=>{try{const r=o.target;if(r instanceof HTMLImageElement){const l=y(r.currentSrc||r.src||"");if(l!==null)e(l);const i=a.get(r);if(i!==undefined){let c=false;try{c=new URL(i,document.baseURI).href===new URL(r.currentSrc||r.src||"",document.baseURI).href}catch{c=false}if(c){a.delete(r);u.delete(r)}}}}catch{}},true)}catch{}}var J=30000;var G=3000;document.addEventListener("DOMContentLoaded",()=>{const n=window.Babel;const d="om-src-id";if(n&&n.registerPlugin&&!(n.availablePlugins&&n.availablePlugins[d])){n.registerPlugin(d,({types:h})=>({visitor:{JSXOpeningElement(y,m){const w=y.node;if(w.name&&w.name.type==="JSXMemberExpression")return;for(let t=0;t<w.attributes.length;t++){const a=w.attributes[t];if(a.type==="JSXAttribute"&&a.name&&a.name.name==="data-om-id")return}const R=m.file&&m.file.opts&&m.file.opts.filename||"?";const O=w.loc&&w.loc.start;const e=`jsx:${R}:${w.start??0}:${O?O.line:0}:${O?O.column+1:0}`;w.attributes.push(h.jsxAttribute(h.jsxIdentifier("data-om-id"),h.stringLiteral(e)))}}}))}const p="om-text-extract";let f=false;if(B&&n&&n.registerPlugin&&!(n.availablePlugins&&n.availablePlugins[p])){const h=window.React;if(h&&h.useSyncExternalStore&&h.createElement){f=true;const y={};const m=new Set;let w=0;window.__omTextO=y;window.__omTextSet=(e)=>{for(const t in e){const a=e[t];if(a==null)delete y[t];else y[t]=a}w++;m.forEach((t)=>t())};const R=(e)=>{m.add(e);return()=>m.delete(e)};const O=()=>w;window.__OmT=function e(t){h.useSyncExternalStore(R,O,O);return h.createElement("span",{"data-om-text":t.i,className:"__om-t"},t.i in y?y[t.i]:t.children)};n.registerPlugin(p,({types:e})=>{const t={style:1,script:1,noscript:1,textarea:1,title:1,option:1,text:1,tspan:1,textPath:1};const a={placeholder:1,alt:1,title:1,label:1,"aria-label":1,"aria-description":1,"aria-placeholder":1};const u=(o,r)=>e.logicalExpression("??",e.memberExpression(e.logicalExpression("||",e.memberExpression(e.identifier("window"),e.identifier("__omTextO")),e.objectExpression([])),e.stringLiteral(o),true),r);const s=(o)=>o.file&&o.file.opts&&o.file.opts.filename||"?";const S=(o)=>o.file&&o.file.code||"";const _=(o,r)=>{const l=(c)=>c&&c.start!=null&&c.end!=null&&(c.type==="StringLiteral"||c.type==="TemplateLiteral"&&c.expressions.length===0)?[c.start,c.end]:null;const i=l(r);if(i)return i;if(r&&r.type==="Identifier"){const c=o.scope.getBinding(r.name);if(c&&c.constant&&c.path.node.type==="VariableDeclarator"){return l(c.path.node.init)}}return null};const v=(o,r,l)=>{const i=o.node;let c=false;const k=(E,T)=>{c=true;return e.jsxElement(e.jsxOpeningElement(e.jsxIdentifier("__OmT"),[e.jsxAttribute(e.jsxIdentifier("i"),e.stringLiteral(E))],false),e.jsxClosingElement(e.jsxIdentifier("__OmT")),[T],false)};const b=i.children.map((E)=>{if(E.type==="JSXText"){if(E.start==null||E.end==null)return E;const T=l.slice(E.start,E.end);const j=T.length-T.trimStart().length;const L=T.length-T.trimEnd().length;if(j+L>=T.length)return E;return k(`txt:${r}:${E.start+j}:${E.end-L}`,E)}if(E.type==="JSXExpressionContainer"){const T=_(o,E.expression);if(T)return k(`str:${r}:${T[0]}:${T[1]}`,E)}return E});if(c)i.children=b};return{visitor:{JSXOpeningElement(o,r){const l=o.node;const i=s(r);const c={};for(let k=0;k<l.attributes.length;k++){const b=l.attributes[k];if(b.type!=="JSXAttribute"||!b.name)continue;const E=b.name.name;if(!a[E])continue;if(!b.value||b.value.type!=="StringLiteral")continue;if(b.value.start==null||b.value.end==null)continue;const T=`txt:${i}:${b.value.start}:${b.value.end}`;c[E]=T;b.value=e.jsxExpressionContainer(u(T,e.stringLiteral(b.value.value)))}if(Object.keys(c).length){l.attributes.push(e.jsxAttribute(e.jsxIdentifier("data-om-text-attrs"),e.stringLiteral(JSON.stringify(c))))}},JSXElement(o,r){const l=o.node.openingElement;const i=l&&l.name&&l.name.name;if(i==="__OmT")return;if(typeof i==="string"&&t[i])return;v(o,s(r),S(r))},JSXFragment(o,r){v(o,s(r),S(r))}}}})}}const g=f?["transform-react-jsx-source",d,p]:["transform-react-jsx-source",d];document.querySelectorAll('script[type="text/babel"],script[type="text/jsx"]').forEach((h,y)=>{const m=h.getAttribute("data-plugins")||"";const w=g.filter((R)=>m.indexOf(R)<0);if(w.length){h.setAttribute("data-plugins",m?`${m},${w.join(",")}`:w.join(","))}if(!h.hasAttribute("data-filename")){h.setAttribute("data-filename",h.getAttribute("src")||`inline-${y}`)}})});var A=window.parent;var U="not editable here — open the project in the Claude Design editor to save";var W=()=>Promise.resolve({persisted:false,noHost:true,reason:U});var H=W;var M="data/storage.json";var z=()=>{try{const n=new URL(document.baseURI);const d=n.pathname.match(/\/projects\/([^/]+)\/serve\//);if(d)return d[1];return n.hostname.split(".")[0]||""}catch{return location.hostname.split(".")[0]||""}};var Z=()=>{try{const n=new URL(document.baseURI);const d=n.pathname.indexOf("/serve/");if(d>=0)return n.origin+n.pathname.slice(0,d+"/serve/".length)+M}catch{}return"./"+M};var x=null;var N=()=>{if(!x){x=fetch(Z(),{cache:"no-store"}).then((n)=>{if(n.ok)return n.text();return n.status===404?"":null}).catch(()=>null).then((n)=>{if(n===null){x=null;return null}const d=new Map;if(!n)return d;let p;try{p=JSON.parse(n)}catch{console.warn("[omelette.storage] "+M+" is not valid JSON; treating the store as unreadable so a save cannot overwrite the "+"hand-edited bytes. Fix the JSON (or delete the file) to re-enable persistence.");x=null;return null}if(p===null||typeof p!=="object"||Array.isArray(p)){console.warn("[omelette.storage] "+M+" doesn't hold a JSON object; treating the store as unreadable so a save cannot "+"overwrite the hand-edited bytes. Make the top level a JSON object to re-enable persistence.");x=null;return null}const f=p;if("data"in f){const g=f.data;if(g===null||typeof g!=="object"||Array.isArray(g)){console.warn("[omelette.storage] "+M+' has a "data" field that is not a JSON object; treating the store as unreadable so a '+'save cannot overwrite the hand-edited bytes. Make "data" a JSON object to re-enable persistence.');x=null;return null}const h=f._meta;const y=h!==null&&typeof h==="object"?h.project:undefined;if(typeof y==="string"&&y!==""&&y!==z())return d;for(const m of Object.keys(g))d.set(m,g[m]);return d}for(const g of Object.keys(f)){if(g!=="_meta")d.set(g,f[g])}return d})}return x};var F=(n)=>H(M,JSON.stringify({_meta:{project:z(),version:1},data:Object.fromEntries(n)},null,2));var D=Promise.resolve();var $=(n)=>{const d=D.then(n);D=d.then(()=>{return},()=>{return});return d};var V=/sk-(?:ant-)?[A-Za-z0-9_-]{16,}|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{20,}|xox[a-z]-[A-Za-z0-9][A-Za-z0-9-]{9,}|AIza[0-9A-Za-z_-]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----/;var Y=/password|passwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token|credential/i;var Q=(n,d,p)=>{if(V.test(d)||Y.test(n)&&typeof p==="string"&&p.length>=8){console.warn('[omelette.storage] the value for "'+n+'" looks like a credential. The storage file is a plaintext project file — visible to '+"everyone with project access and copied when the project is duplicated. Do not store secrets here.")}};var q={persisted:false,reason:"could not load the existing store — not overwriting it"};var X={persisted:false,reason:"stored value changed since a failed read — re-read this key before saving"};var P=new Set;var ee={get:(n)=>{if(typeof n!=="string"){return Promise.reject(new TypeError("storage.get: key must be a string"))}return $(N).then((d)=>{if(d===null){P.add(n);return null}P.delete(n);if(!d.has(n))return null;const p=d.get(n);return p==null?null:JSON.parse(JSON.stringify(p))})},set:(n,d)=>{if(typeof n!=="string"){return Promise.reject(new TypeError("storage.set: key must be a string"))}let p;try{p=JSON.stringify(d)}catch(g){return Promise.reject(new TypeError("storage.set: value must be JSON-serializable ("+String(g)+")"))}if(p===undefined){return Promise.reject(new TypeError("storage.set: value must be JSON-serializable"))}Q(n,p,d);const f=JSON.parse(p);return $(()=>N().then((g)=>{if(g===null)return q;if(P.has(n)){if(g.has(n))return X;P.delete(n)}g.set(n,f);return F(g)}))},delete:(n)=>{if(typeof n!=="string"){return Promise.reject(new TypeError("storage.delete: key must be a string"))}return $(()=>N().then((d)=>{if(d===null)return q;if(P.has(n)){if(d.has(n))return X;P.delete(n)}d.delete(n);return F(d)}))},keys:()=>$(N).then((n)=>n===null?[]:Array.from(n.keys()))};window.omelette={writeFile:(n,d)=>H(n,d).then((p)=>{if(!p.persisted&&!p.noHost){throw new Error(p.reason||"write failed")}}),storage:ee};if(A&&A!==window){const n=(e,t)=>{try{A.postMessage({__omelette_log:true,type:e,data:t},"*")}catch{}};["log","warn","error"].forEach((e)=>{const t=console[e];console[e]=(...a)=>{const u=a.map((s)=>{try{return typeof s==="object"?JSON.stringify(s):String(s)}catch{try{return String(s)}catch{return"[unstringifiable]"}}}).join(" ");n(e,u);t.apply(console,a)}});window.addEventListener("error",(e)=>{const t=e.target;if(t&&t!==window&&t.tagName){const a=t.src||t.href||"";n("resource_error",`${t.tagName} failed to load: ${a}`)}else{n("error",`${e.message||"Unknown error"} at ${e.filename||"?"}:${e.lineno||0}:${e.colno||0}`)}},true);window.addEventListener("unhandledrejection",(e)=>{const t=e.reason;const a=t instanceof Error?`${t.message} ${t.stack}`:String(t);n("error",`Unhandled rejection: ${a}`)});window.addEventListener("click",(e)=>{if(e.defaultPrevented||e.button!==0)return;if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;const t=e.composedPath?e.composedPath():[];const a=["button","input","select","textarea","summary","label"];let u=null;for(const v of t){if(!(v instanceof Element))continue;if(v.localName==="a"){if(!(v instanceof HTMLAnchorElement))return;u=v;break}if(a.indexOf(v.localName)!==-1)return}if(!u)return;if(u.isContentEditable)return;const s=u.closest("[contenteditable]");if(s&&s.getAttribute("contenteditable")!=="false")return;const S=(u.getAttribute("target")||"_self").toLowerCase();if(S!=="_self"&&S!=="_top"&&S!=="_parent")return;let _;try{_=new URL(u.href)}catch{return}if(_.protocol!=="http:"&&_.protocol!=="https:")return;if(location.origin==="null")return;if(_.origin===location.origin)return;e.preventDefault();window.open(_.href,"_blank","noopener,noreferrer")});const d=()=>{try{A.postMessage({type:"omelette:height",height:document.documentElement.scrollHeight},"*")}catch{}};if(window.ResizeObserver)new ResizeObserver(d).observe(document.documentElement);const p=()=>{d();if(!document.querySelector('script[type="text/babel"],script[type="text/jsx"]'))return;const e=()=>document.getElementById("root")||document.querySelector("body > div[id]");const t=e()?.firstElementChild??null;let a=0;const u=()=>{const s=e();if(s&&s.firstElementChild!==t||++a>30){d();return}setTimeout(u,100)};setTimeout(u,100)};if(document.readyState==="complete")p();else window.addEventListener("load",p);const f={};let g=0;const h=(e)=>new Promise((t,a)=>{if(!I.length){a(new Error("claude.complete: no parent origin"));return}const u=`c${++g}`;const s=()=>setTimeout(()=>{delete f[u];a(new Error(`claude.complete: no data for ${J/1000}s`))},J);const S=s();f[u]={resolve:t,reject:a,text:"",t:S,arm:s};try{for(const _ of I){A.postMessage({__om_api:true,id:u,body:e},_)}}catch(_){clearTimeout(S);delete f[u];a(_)}});const y=8;const m=async(e,t)=>{if(!Array.isArray(e.messages)){throw new Error("claude.complete: tools require a messages array")}const a=e.messages.slice();const u={...e,tools:e.tools.map((_)=>{if(_===null||typeof _!=="object")return _;const v={};for(const o of Object.keys(_)){if(typeof _[o]!=="function")v[o]=_[o]}return v})};const s=u.tool_choice;const S=s!=null&&(s.type==="any"||s.type==="tool")?{...u,tool_choice:s.disable_parallel_tool_use!==undefined?{type:"auto",disable_parallel_tool_use:s.disable_parallel_tool_use}:{type:"auto"}}:u;for(let _=0;_<y;_++){const v=await h({..._===0?u:S,messages:a});const o=v.message;const r=o&&Array.isArray(o.content)?o.content:null;const l=r?r.filter((c)=>c?.type==="tool_use"):[];if(o?.stop_reason!=="tool_use"||l.length===0){return v.text}const i=[];for(const c of l){const k=t.get(c.name);if(!k){i.push({type:"tool_result",tool_use_id:c.id,content:`no handler for tool "${c.name}"`,is_error:true});continue}try{const b=await k(c.input);const E=typeof b==="string"?b:O(b)??"";i.push({type:"tool_result",tool_use_id:c.id,content:E})}catch(b){i.push({type:"tool_result",tool_use_id:c.id,content:String(b?.message??b??"tool handler failed"),is_error:true})}}a.push({role:"assistant",content:r},{role:"user",content:i})}throw new Error(`claude.complete: exceeded ${y} tool turns`)};window.claude={complete(e){const t=e;if(t!==null&&typeof t==="object"&&Array.isArray(t.tools)&&t.tools.some((a)=>a!==null&&typeof a==="object"&&typeof a.run==="function")){const a=new Map;for(const u of t.tools){if(u!==null&&typeof u==="object"&&typeof u.run==="function"){a.set(String(u.name),u.run)}}return m(t,a)}return h(e).then((a)=>a.text)}};const w={};let R=0;H=(e,t)=>new Promise((a)=>{if(!I.length){a({persisted:false,noHost:true,reason:U});return}const u=`f${++R}`;const s=setTimeout(()=>{delete w[u];a({persisted:false,noHost:true,reason:U})},G);w[u]={settle:a,t:s};try{for(const S of I){A.postMessage({__om_file:true,id:u,op:"write",path:e,content:t},S)}}catch{clearTimeout(s);delete w[u];a({persisted:false,noHost:true,reason:U})}});const O=(e)=>{try{return JSON.stringify(e)}catch{return JSON.stringify(String(e))}};window.addEventListener("message",(e)=>{if(I.indexOf(e.origin)<0)return;if(e.source!==A)return;const t=e.data;if(!t)return;if(t.type==="omelette-preview-refresh"){if(typeof t.token!=="string"||!/^[0-9a-f.-]+(\.(rc|pr-[0-9]+))?(\.[0-9]+\.[0-9a-f]{16})?$/.test(t.token))return;const s=Math.max(1,Math.floor((t.expiresAt||0)-Date.now()/1000));document.cookie="__Host-omelette-preview="+t.token+"; Path=/; Secure; SameSite=None; Partitioned; Max-Age="+s;C();return}if(t.__om_file_r){const s=w[t.id];if(!s)return;clearTimeout(s.t);delete w[t.id];s.settle(t.ok?{persisted:true}:{persisted:false,reason:t.error||"write failed"});return}if(t.__om_api_r){const s=f[t.id];if(!s)return;if(t.error!=null){clearTimeout(s.t);delete f[t.id];s.reject(new Error(t.error));return}if(t.chunk!=null){clearTimeout(s.t);s.t=s.arm();s.text+=t.chunk;return}if(t.done){clearTimeout(s.t);delete f[t.id];s.resolve({text:t.text!=null?t.text:s.text,message:t.message});return}return}if(!t.__om_eval)return;const a=t;const u=(s)=>{e.source.postMessage({...s,__om_eval_r:1,id:a.id},e.origin)};try{const s=(0,eval)(a.code);if(s&&typeof s.then==="function"){s.then((S)=>u({ok:1,v:O(S)}),(S)=>u({ok:0,e:String(S)}))}else{u({ok:1,v:O(s)})}}catch(s){u({ok:0,e:String(s)})}})}})();
+</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+:root{--page:#f2f2f0;--bg:#ffffff;--ink:#1d1d1f;--sub:#86868b;--faint:#b0aeab;--chip:#f5f5f3;--line:#f0efed;--note:#514f4d}
+:root[data-theme="dark"]{--page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#6e6e73;--chip:#232327;--line:#2a2a2e;--note:#c7c7cc}
+:root[data-scale="0.9"] [data-scale-region]{zoom:0.9}
+:root[data-scale="1.15"] [data-scale-region]{zoom:1.15}
+:root[data-scale="1.3"] [data-scale-region]{zoom:1.3}
+@media (prefers-color-scheme:dark){:root[data-theme="system"]{--page:#000000;--bg:#161618;--ink:#f5f5f7;--sub:#98989d;--faint:#6e6e73;--chip:#232327;--line:#2a2a2e;--note:#c7c7cc}}
+body{margin:0;background:var(--page);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--sub)}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 0">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ frameDark }}" hint-size="430px,880px">
+<div style="position:relative;height:100%;background:var(--bg)">
+<div data-scale-region="1" style="height:100%;overflow-y:auto;padding:72px 26px 48px;box-sizing:border-box">
+  <div style="padding-top:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--sub)">{{ nowLine }}</div>
+      <button onClick="{{ openSettings }}" style="border:none;background:var(--chip);color:var(--ink);width:30px;height:30px;border-radius:15px;font-size:15px;cursor:pointer;padding:0" aria-label="Settings">&#9881;&#65038;</button>
+    </div>
+    <div style="font-size:11px;letter-spacing:0.14em;color:var(--sub);font-weight:600">PICKUP SCHEDULE</div>
+    <div style="font-size:17px;font-weight:600;color:var(--ink);margin-top:3px">4248 W. Potomac Ave</div>
+  </div>
+  <div style="margin-top:34px">
+    <div style="font-size:15px;color:var(--sub)">Next pickup</div>
+    <div style="font-size:54px;font-weight:700;letter-spacing:-0.02em;color:var(--ink);line-height:1.05;margin-top:4px">{{ heroWhen }}</div>
+    <div style="display:flex;align-items:center;gap:9px;margin-top:12px">
+      <span style="{{ heroDotStyle }}"></span>
+      <span style="font-size:17px;font-weight:600;color:var(--ink)">{{ heroType }}</span>
+    </div>
+    <div style="font-size:14px;color:var(--sub);margin-top:5px">{{ heroSub }}</div>
+    <div style="font-size:14px;color:var(--sub);margin-top:14px">{{ thenLine }}</div>
+    <div style="margin-top:26px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <sc-for list="{{ countdown }}" as="u" hint-placeholder-count="4">
+        <div style="text-align:center">
+          <div style="font-size:36px;font-weight:700;letter-spacing:-0.01em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1">{{ u.v }}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:5px">{{ u.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--faint);margin-top:10px">{{ countdownCaption }}</div>
+  </div>
+  <sc-if value="{{ holidayNote }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:22px;background:var(--chip);border-radius:12px;padding:13px 16px;font-size:13px;line-height:1.45;color:var(--note)">{{ holidayNote }}</div>
+  </sc-if>
+  <div style="margin-top:38px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <div style="font-size:17px;font-weight:600;color:var(--ink)">{{ monthLabel }}</div>
+      <div style="display:flex;gap:6px">
+        <button onClick="{{ prevMonth }}" style="border:none;background:var(--chip);color:var(--ink);width:30px;height:30px;border-radius:15px;font-size:15px;cursor:pointer;padding:0">&#8249;</button>
+        <button onClick="{{ nextMonth }}" style="border:none;background:var(--chip);color:var(--ink);width:30px;height:30px;border-radius:15px;font-size:15px;cursor:pointer;padding:0">&#8250;</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-top:16px">
+      <sc-for list="{{ dowLabels }}" as="d" hint-placeholder-count="7">
+        <div style="text-align:center;font-size:11px;font-weight:600;color:var(--faint);padding-bottom:8px">{{ d }}</div>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px">
+      <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
+        <div style="height:42px;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="{{ c.numStyle }}">{{ c.n }}</div>
+          <div style="display:flex;gap:3px;height:5px">
+            <sc-if value="{{ c.g }}" hint-placeholder-val="{{ false }}"><span style="width:5px;height:5px;border-radius:50%;background:var(--ink);display:block"></span></sc-if>
+            <sc-if value="{{ c.r }}" hint-placeholder-val="{{ false }}"><span style="{{ recDotStyle }}"></span></sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:18px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)"><span style="{{ legendGSwatch }}"></span>Garbage &#183; Thursdays</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)"><span style="{{ legendRSwatch }}"></span>Recycling &#183; every other Tuesday</div>
+    </div>
+  </div>
+  <div style="margin-top:38px">
+    <div style="font-size:17px;font-weight:600;color:var(--ink);margin-bottom:4px">Upcoming</div>
+    <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="5">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)">
+        <span style="{{ u.dotStyle }}"></span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:500;color:var(--ink)">{{ u.type }}</div>
+          <div style="font-size:13px;color:var(--sub);margin-top:1px">{{ u.date }}</div>
+        </div>
+        <div style="font-size:13px;color:var(--sub)">{{ u.when }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:26px;font-size:12px;line-height:1.5;color:var(--faint)">Carts out by 6&#8202;AM. Chicago Blue Cart program &#8212; no pickups on city holidays; service runs a day late for the rest of that week. {{ sourceNote }}</div>
+</div>
+<sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeSettings }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.35);z-index:20">
+    <div onClick="{{ eatClick }}" data-scale-region="1" style="position:absolute;top:120px;right:20px;width:280px;background:var(--bg);border-radius:18px;padding:18px 20px 22px;box-sizing:border-box;box-shadow:0 12px 40px rgba(0,0,0,0.25)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:17px;font-weight:600;color:var(--ink)">Settings</div>
+        <button onClick="{{ closeSettings }}" style="border:none;background:none;color:var(--ink);font-size:15px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit">Done</button>
+      </div>
+      <div style="font-size:11px;letter-spacing:0.14em;color:var(--sub);font-weight:600;margin-top:22px">APPEARANCE</div>
+      <div style="display:flex;gap:0;background:var(--chip);border-radius:10px;padding:3px;margin-top:10px">
+        <sc-for list="{{ themeOptions }}" as="t" hint-placeholder-count="3">
+          <button onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</button>
+        </sc-for>
+      </div>
+      <div style="font-size:12px;color:var(--faint);margin-top:10px">System follows your device&#8217;s appearance.</div>
+      <div style="font-size:11px;letter-spacing:0.14em;color:var(--sub);font-weight:600;margin-top:22px">TEXT SIZE</div>
+      <div style="display:flex;gap:0;background:var(--chip);border-radius:10px;padding:3px;margin-top:10px">
+        <sc-for list="{{ scaleOptions }}" as="s" hint-placeholder-count="4">
+          <button onClick="{{ s.onClick }}" style="{{ s.style }}">{{ s.label }}</button>
+        </sc-for>
+      </div>
+      <div style="font-size:12px;color:var(--faint);margin-top:10px">Makes everything on the page larger or smaller.</div>
+      <div style="font-size:11px;letter-spacing:0.14em;color:var(--sub);font-weight:600;margin-top:22px">NOTIFICATIONS</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+        <div style="font-size:14px;color:var(--ink)">Pickup reminders</div>
+        <button onClick="{{ toggleNotify }}" style="{{ notifToggleStyle }}" aria-label="Pickup reminders"><span style="{{ notifKnobStyle }}"></span></button>
+      </div>
+      <sc-if value="{{ notifyOn }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:0;background:var(--chip);border-radius:10px;padding:3px;margin-top:12px">
+          <sc-for list="{{ notifyTimeOptions }}" as="n" hint-placeholder-count="2">
+            <button onClick="{{ n.onClick }}" style="{{ n.style }}">{{ n.label }}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <div style="font-size:12px;color:var(--faint);margin-top:10px">{{ notifStatus }}</div>
+    </div>
+  </div>
+</sc-if>
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:520,&quot;height&quot;:960},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;System&quot;,&quot;options&quot;:[&quot;Day&quot;,&quot;Night&quot;,&quot;System&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#3572b0&quot;,&quot;options&quot;:[&quot;#3572b0&quot;,&quot;#3f7d54&quot;,&quot;#8a6d3b&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;weekStartMonday&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Calendar&quot;}}">
+class Component extends DCLogic {
+  state = { monthOffset: 0, live: null, settingsOpen: false, theme: (typeof localStorage !== 'undefined' && localStorage.getItem('gc-theme')) || null, scale: (typeof localStorage !== 'undefined' && parseFloat(localStorage.getItem('gc-scale'))) || 1,
+    notify: (typeof localStorage !== 'undefined' && localStorage.getItem('gc-notify') === '1'),
+    notifyTime: (typeof localStorage !== 'undefined' && localStorage.getItem('gc-notify-time')) || 'evening',
+    notifPerm: (typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'), pushActive: false };
+  componentDidMount() {
+    fetch('/.netlify/functions/schedule').then(r => r.ok ? r.json() : null)
+      .then(j => { if (j && j.ok) this.setState({ live: j }); }).catch(() => {});
+    this._mq = window.matchMedia('(prefers-color-scheme: dark)');
+    this._mqFn = () => this.forceUpdate();
+    this._mq.addEventListener('change', this._mqFn);
+    this._clock = setInterval(() => this.forceUpdate(), 1000);
+    this._applyTheme();
+    this._scheduleNotif();
+    if (this.state.notify && typeof Notification !== 'undefined' && Notification.permission === 'granted') this._pushSubscribe();
+  }
+  async _pushSubscribe() {
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      const kr = await fetch('/.netlify/functions/subscribe'); if (!kr.ok) return;
+      const { publicKey } = await kr.json(); if (!publicKey) return;
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      let b64 = publicKey.replace(/-/g, '+').replace(/_/g, '/');
+      b64 += '='.repeat((4 - (b64.length % 4)) % 4);
+      const appKey = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appKey });
+      const r = await fetch('/.netlify/functions/subscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), time: this.state.notifyTime }) });
+      if (r.ok) this.setState({ pushActive: true }, () => clearTimeout(this._notifT));
+    } catch (e) {}
+  }
+  async _pushUnsubscribe() {
+    try {
+      this.setState({ pushActive: false });
+      if (!('serviceWorker' in navigator)) return;
+      const reg = await navigator.serviceWorker.getRegistration();
+      const sub = reg && await reg.pushManager.getSubscription();
+      if (sub) {
+        await fetch('/.netlify/functions/subscribe', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+        await sub.unsubscribe();
+      }
+    } catch (e) {}
+  }
+  _reminderTarget() {
+    const live = this.state.live;
+    const gDow = live && live.garbageDow != null ? live.garbageDow : 4;
+    const rDow = live && live.recyclingDow != null ? live.recyclingDow : 2;
+    let anchor = new Date(2026, 7, 11);
+    if (live && live.recyclingAnchor) { const a = live.recyclingAnchor.split('-').map(Number); const c = new Date(a[0], a[1] - 1, a[2]); if (c.getDay() === rDow) anchor = c; }
+    const now = new Date(); const T = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const evening = this.state.notifyTime !== 'morning';
+    for (let i = 0; i < 16; i++) {
+      const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i);
+      const g = d.getDay() === gDow;
+      const diff = Math.round((d - anchor) / 864e5);
+      const r = d.getDay() === rDow && ((diff % 14) + 14) % 14 === 0;
+      if (!g && !r) continue;
+      const type = g && r ? 'Garbage & recycling' : g ? 'Garbage' : 'Recycling';
+      const t = evening ? new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 19, 0, 0) : new Date(d.getFullYear(), d.getMonth(), d.getDate(), 5, 30, 0);
+      if (t > now) return { target: t, type, day: d };
+    }
+    return null;
+  }
+  _scheduleNotif() {
+    clearTimeout(this._notifT);
+    if (!(this.state.notify && typeof Notification !== 'undefined' && Notification.permission === 'granted')) return;
+    if (this.state.pushActive) return; // server push handles delivery
+    const nx = this._reminderTarget(); if (!nx) return;
+    const ms = Math.min(nx.target - new Date(), 20 * 864e5);
+    this._notifT = setTimeout(() => {
+      try { new Notification(nx.type + ' pickup ' + (this.state.notifyTime === 'morning' ? 'this morning' : 'tomorrow'), { body: 'Carts out by 6 AM \u2014 4248 W. Potomac Ave' }); } catch (e) {}
+      setTimeout(() => this._scheduleNotif(), 60000);
+    }, ms);
+  }
+  componentDidUpdate() { this._applyTheme(); }
+  componentWillUnmount() { if (this._mq) this._mq.removeEventListener('change', this._mqFn); clearInterval(this._clock); clearTimeout(this._notifT); }
+  _applyTheme() {
+    const t = (this.state.theme ?? this.props.theme ?? 'System').toLowerCase();
+    document.documentElement.setAttribute('data-theme', t === 'day' ? 'light' : t === 'night' ? 'dark' : 'system');
+    document.documentElement.setAttribute('data-scale', String(this.state.scale || 1));
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#3572b0';
+    const weekStartMonday = this.props.weekStartMonday ?? false;
+    const today = new Date(); const T = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const live = this.state.live;
+    const gDow = live && live.garbageDow != null ? live.garbageDow : 4;
+    const rDow = live && live.recyclingDow != null ? live.recyclingDow : 2;
+    let anchor = new Date(2026, 7, 11);
+    if (live && live.recyclingAnchor) { const a = live.recyclingAnchor.split('-').map(Number); const cand = new Date(a[0], a[1] - 1, a[2]); if (cand.getDay() === rDow) anchor = cand; }
+    const DAY = 864e5;
+    const isG = d => d.getDay() === gDow;
+    const isR = d => { if (d.getDay() !== rDow) return false; const diff = Math.round((d - anchor) / DAY); return ((diff % 14) + 14) % 14 === 0; };
+    const HOLS = { '2026-0-1':"New Year's Day",'2026-0-19':'MLK Day','2026-1-12':"Lincoln's Birthday",'2026-2-2':'Pulaski Day','2026-4-25':'Memorial Day','2026-5-19':'Juneteenth','2026-6-3':'Independence Day (obs.)','2026-8-7':'Labor Day','2026-9-12':'Columbus Day','2026-10-11':'Veterans Day','2026-10-26':'Thanksgiving','2026-11-25':'Christmas Day','2027-0-1':"New Year's Day",'2027-0-18':'MLK Day','2027-1-12':"Lincoln's Birthday",'2027-2-1':'Pulaski Day','2027-4-31':'Memorial Day','2027-5-18':'Juneteenth (obs.)','2027-6-5':'Independence Day (obs.)','2027-8-6':'Labor Day' };
+    const holOf = d => HOLS[d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate()];
+    const weekHoliday = d => { // holiday earlier in the same Mon-Sun week, on or before pickup day
+      for (let i = 0; i <= (d.getDay() + 6) % 7; i++) { const p = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i); const h = holOf(p); if (h) return h; }
+      return null;
+    };
+    const BLUE = '#5FC9EE', GREEN = '#3EC163';
+    const MO = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const WD = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const fmt = d => WD[d.getDay()].slice(0,3) + ', ' + MO[d.getMonth()].slice(0,3) + ' ' + d.getDate();
+    const rel = d => { const n = Math.round((d - T) / DAY); return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n < 7 ? WD[d.getDay()] : 'in ' + n + ' days'; };
+    // upcoming pickups
+    const ups = [];
+    for (let i = 0; i < 70 && ups.length < 6; i++) {
+      const d = new Date(T.getTime() + i * DAY);
+      if (isG(d)) ups.push({ d, type: 'Garbage', color: 'var(--ink)' });
+      if (isR(d)) ups.push({ d, type: 'Recycling', color: accent });
+    }
+    const hero = ups[0];
+    const heroHol = weekHoliday(hero.d);
+    const dot = c => ({ width: 10, height: 10, borderRadius: 5, background: c, display: 'block', flex: 'none' });
+    const smallDot = c => ({ width: 5, height: 5, borderRadius: '50%', background: c, display: 'block' });
+    // calendar
+    const vm = new Date(T.getFullYear(), T.getMonth() + this.state.monthOffset, 1);
+    const startDow = (vm.getDay() - (weekStartMonday ? 1 : 0) + 7) % 7;
+    const dim = new Date(vm.getFullYear(), vm.getMonth() + 1, 0).getDate();
+    const cells = [];
+    for (let i = 0; i < startDow; i++) cells.push({ n: '', numStyle: {}, g: false, r: false, key: 'b' + i });
+    for (let n = 1; n <= dim; n++) {
+      const d = new Date(vm.getFullYear(), vm.getMonth(), n);
+      const isToday = d.getTime() === T.getTime();
+      const g = isG(d), r = isR(d);
+      cells.push({ n, g: false, r: false, key: 'd' + n,
+        numStyle: { width: 34, height: 30, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: isToday || g || r ? 600 : 400, background: g ? GREEN : r ? BLUE : 'transparent', color: g || r ? '#14161a' : 'var(--ink)', boxShadow: isToday ? 'inset 0 0 0 2px var(--ink)' : 'none' } });
+    }
+    const then = ups[1];
+    const themeProp = this.state.theme ?? this.props.theme ?? 'System';
+    const frameDark = themeProp === 'Night' || (themeProp === 'System' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const themeOptions = ['Day', 'Night', 'System'].map(t => ({
+      label: t,
+      onClick: () => { try { localStorage.setItem('gc-theme', t); } catch (e) {} this.setState({ theme: t }); },
+      style: { flex: 1, border: 'none', cursor: 'pointer', padding: '7px 0', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: t === themeProp ? 'var(--bg)' : 'transparent', color: 'var(--ink)', fontWeight: t === themeProp ? 600 : 400, boxShadow: t === themeProp ? '0 1px 3px rgba(0,0,0,0.15)' : 'none' }
+    }));
+    const scaleOptions = [['Small', 0.9], ['Default', 1], ['Large', 1.15], ['XL', 1.3]].map(([label, val]) => ({
+      label,
+      onClick: () => { try { localStorage.setItem('gc-scale', String(val)); } catch (e) {} this.setState({ scale: val }); },
+      style: { flex: 1, border: 'none', cursor: 'pointer', padding: '7px 0', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: val === this.state.scale ? 'var(--bg)' : 'transparent', color: 'var(--ink)', fontWeight: val === this.state.scale ? 600 : 400, boxShadow: val === this.state.scale ? '0 1px 3px rgba(0,0,0,0.15)' : 'none' }
+    }));
+    const segBtn = (active) => ({ flex: 1, border: 'none', cursor: 'pointer', padding: '7px 0', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: active ? 'var(--bg)' : 'transparent', color: 'var(--ink)', fontWeight: active ? 600 : 400, boxShadow: active ? '0 1px 3px rgba(0,0,0,0.15)' : 'none' });
+    const notifyOn = this.state.notify && this.state.notifPerm === 'granted';
+    const nx = this._reminderTarget();
+    const fmtTime = t => { const h = t.getHours() % 12 || 12; const m = String(t.getMinutes()).padStart(2, '0'); return h + ':' + m + ' ' + (t.getHours() >= 12 ? 'PM' : 'AM'); };
+    let notifStatus = 'Get a heads-up before each pickup.';
+    if (this.state.notifPerm === 'unsupported') notifStatus = 'Notifications aren\u2019t available in this browser view.';
+    else if (this.state.notifPerm === 'denied') notifStatus = 'Notifications are blocked \u2014 allow them in browser settings.';
+    else if (notifyOn && nx) notifStatus = 'Next reminder: ' + fmt(nx.target) + ', ' + fmtTime(nx.target) + '.' + (this.state.pushActive ? ' Delivered even when this page is closed.' : '');
+    const notifyTimeOptions = [['Night before, 7 PM', 'evening'], ['Morning, 5:30 AM', 'morning']].map(([label, val]) => ({
+      label, onClick: () => { try { localStorage.setItem('gc-notify-time', val); } catch (e) {} this.setState({ notifyTime: val }, () => { this._scheduleNotif(); if (this.state.pushActive) this._pushSubscribe(); }); },
+      style: Object.assign(segBtn(this.state.notifyTime === val), { fontSize: 12 })
+    }));
+    const toggleNotify = () => {
+      if (this.state.notify) { try { localStorage.setItem('gc-notify', '0'); } catch (e) {} clearTimeout(this._notifT); this.setState({ notify: false }); this._pushUnsubscribe(); return; }
+      if (typeof Notification === 'undefined') { this.setState({ notifPerm: 'unsupported' }); return; }
+      const enable = () => { try { localStorage.setItem('gc-notify', '1'); } catch (e) {} this.setState({ notify: true, notifPerm: 'granted' }, () => { this._scheduleNotif(); this._pushSubscribe(); }); };
+      if (Notification.permission === 'granted') enable();
+      else if (Notification.permission === 'denied') this.setState({ notifPerm: 'denied' });
+      else Notification.requestPermission().then(p => { this.setState({ notifPerm: p }); if (p === 'granted') enable(); }).catch(() => {});
+    };
+    const notifToggleStyle = { width: 46, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer', padding: 2, background: notifyOn ? '#3EC163' : 'var(--chip)', display: 'flex', justifyContent: notifyOn ? 'flex-end' : 'flex-start', alignItems: 'center', transition: 'background .2s', flex: 'none' };
+    const notifKnobStyle = { width: 24, height: 24, borderRadius: 12, background: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', display: 'block' };
+    const now = new Date(); const h12 = now.getHours() % 12 || 12; const mm = String(now.getMinutes()).padStart(2, '0');
+    const nowLine = WD[now.getDay()] + ', ' + MO[now.getMonth()] + ' ' + now.getDate() + ' \u00b7 ' + h12 + ':' + mm + ' ' + (now.getHours() >= 12 ? 'PM' : 'AM');
+    // countdown to next garbage pickup, carts-out deadline 6:00 AM
+    let target = null, targetDate = null;
+    for (let i = 0; i < 9 && !target; i++) { const d = new Date(T.getFullYear(), T.getMonth(), T.getDate() + i); if (isG(d)) { const t6 = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 6, 0, 0); if (t6 > now) { target = t6; targetDate = d; } } }
+    const left = Math.max(0, target - now); const p2 = x => String(x).padStart(2, '0');
+    const countdown = [
+      { v: p2(Math.floor(left / 864e5)), label: 'Days' },
+      { v: p2(Math.floor(left / 36e5) % 24), label: 'Hours' },
+      { v: p2(Math.floor(left / 6e4) % 60), label: 'Minutes' },
+      { v: p2(Math.floor(left / 1e3) % 60), label: 'Seconds' }
+    ];
+    const countdownCaption = 'Until garbage carts are due out \u00b7 ' + fmt(targetDate) + ', 6:00 AM';
+    return {
+      frameDark, nowLine, countdown, countdownCaption, themeOptions, scaleOptions,
+      notifyOn, notifStatus, notifyTimeOptions, toggleNotify, notifToggleStyle, notifKnobStyle,
+      settingsOpen: this.state.settingsOpen,
+      openSettings: () => this.setState({ settingsOpen: true }),
+      closeSettings: () => this.setState({ settingsOpen: false }),
+      eatClick: (e) => e.stopPropagation(),
+      heroWhen: rel(hero.d), heroType: hero.type + ' pickup',
+      heroSub: fmt(hero.d) + ' \u00b7 carts out by 6\u202fAM',
+      heroDotStyle: dot(hero.color),
+      thenLine: 'Then ' + then.type.toLowerCase() + ' on ' + fmt(then.d),
+      holidayNote: heroHol ? heroHol + ' falls this week \u2014 this pickup may run a day late.' : null,
+      monthLabel: MO[vm.getMonth()] + ' ' + vm.getFullYear(),
+      prevMonth: () => this.setState(s => ({ monthOffset: s.monthOffset - 1 })),
+      nextMonth: () => this.setState(s => ({ monthOffset: s.monthOffset + 1 })),
+      dowLabels: weekStartMonday ? ['M','T','W','T','F','S','S'] : ['S','M','T','W','T','F','S'],
+      cells,
+      recDotStyle: smallDot(accent),
+      legendGSwatch: { width: 12, height: 12, borderRadius: 3, background: GREEN, display: 'block' },
+      legendRSwatch: { width: 12, height: 12, borderRadius: 3, background: BLUE, display: 'block' },
+      sourceNote: live ? 'Live from Recycle by City.' : '',
+      upcoming: ups.map(u => { const h = weekHoliday(u.d); return { type: u.type, date: fmt(u.d) + (h ? ' \u00b7 may run late (' + h + ')' : ''), when: rel(u.d), dotStyle: dot(u.color) }; })
+    };
+  }
+}
+</script>
+</body>
+</html>
